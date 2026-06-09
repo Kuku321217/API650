@@ -1,0 +1,2409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Storage Tank Design-API 650</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Spline+Sans+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#0d1117;
+    --panel:#161b22;
+    --panel-2:#1c232c;
+    --line:#2a323d;
+    --ink:#e6edf3;
+    --muted:#8b97a6;
+    --accent:#ffb000;
+    --accent-2:#34d399;
+    --danger:#ff5d5d;
+    --blue:#58a6ff;
+    --shadow:0 10px 40px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(255,176,0,.08), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(52,211,153,.07), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Archivo',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.45;
+  }
+  .wrap{max-width:1360px;margin:0 auto;padding:28px 22px 80px;}
+
+  header.top{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);
+    padding-bottom:20px;margin-bottom:26px;
+  }
+  .brand{display:flex;flex-direction:column;gap:6px;}
+  .brand .kick{
+    font-family:'Spline Sans Mono',monospace;font-size:12px;letter-spacing:.32em;
+    text-transform:uppercase;color:var(--accent);
+  }
+  .brand h1{
+    margin:0;font-size:clamp(26px,4vw,42px);font-weight:900;letter-spacing:-.02em;
+    line-height:.98;
+  }
+  .brand h1 span{color:var(--muted);font-weight:600;}
+  .brand .sub{color:var(--muted);font-size:13.5px;max-width:560px;}
+  .top-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  button.btn{
+    font-family:'Spline Sans Mono',monospace;font-size:12.5px;font-weight:600;
+    letter-spacing:.04em;cursor:pointer;border:1px solid var(--line);
+    background:var(--panel-2);color:var(--ink);padding:11px 16px;border-radius:10px;
+    transition:.16s;text-transform:uppercase;
+  }
+  button.btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);}
+  button.btn.primary{background:var(--accent);color:#1a1300;border-color:var(--accent);}
+  button.btn.primary:hover{filter:brightness(1.08);color:#1a1300;}
+
+  .grid{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start;}
+  @media(max-width:980px){.grid{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .card h2{
+    margin:0;font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+    font-family:'Spline Sans Mono',monospace;color:var(--accent);
+    padding:16px 18px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);
+    display:flex;align-items:center;gap:10px;
+  }
+  .card h2 .num{
+    background:var(--accent);color:#1a1300;font-weight:800;border-radius:6px;
+    width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:12px;
+  }
+  .card .body{padding:16px 18px;}
+
+  .field{margin-bottom:13px;}
+  .field:last-child{margin-bottom:0;}
+  .field label{
+    display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:500;
+  }
+  .field .input-row{display:flex;align-items:center;gap:8px;}
+  .field input,.field select{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);
+    border-radius:9px;padding:9px 11px;font-family:'Spline Sans Mono',monospace;
+    font-size:13px;transition:.15s;font-weight:600;
+  }
+  .field input:focus,.field select:focus{
+    outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(88,166,255,.14);
+  }
+  .field .unit{
+    font-family:'Spline Sans Mono',monospace;font-size:11.5px;color:var(--muted);
+    flex:0 0 auto;min-width:42px;
+  }
+  .field input[type=text]{font-family:'Archivo',sans-serif;}
+
+  .section-label{
+    font-family:'Spline Sans Mono',monospace;font-size:11px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--muted);margin:18px 0 10px;
+    padding-top:14px;border-top:1px dashed var(--line);
+  }
+  .section-label:first-child{border-top:none;padding-top:0;margin-top:0;}
+
+  /* compact multi-column field layout */
+  .field-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:10px 16px;margin-bottom:4px;
+  }
+  .field-grid .field{margin-bottom:0;}
+  .field-grid .field label{
+    font-size:11px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .field-grid .field input,.field-grid .field select{padding:7px 9px;font-size:12.5px;}
+  .field-grid .field .unit{min-width:36px;font-size:11px;}
+
+  /* results */
+  .res-stack{display:flex;flex-direction:column;gap:22px;}
+  .summary-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
+    background:var(--line);
+  }
+  .stat{background:var(--panel);padding:15px 16px;}
+  .stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;
+    font-family:'Spline Sans Mono',monospace;}
+  .stat .v{font-size:23px;font-weight:800;margin-top:4px;letter-spacing:-.01em;}
+  .stat .v small{font-size:12px;color:var(--muted);font-weight:500;margin-left:3px;}
+  .stat .v.accent{color:var(--accent);}
+  .stat .v.green{color:var(--accent-2);}
+  .stat .v.blue{color:var(--blue);}
+
+  .tablewrap{overflow-x:auto;}
+  table{border-collapse:collapse;width:100%;font-family:'Spline Sans Mono',monospace;
+    font-size:12px;min-width:760px;}
+  thead th{
+    text-align:right;padding:10px 9px;color:var(--muted);font-weight:600;
+    border-bottom:1px solid var(--line);white-space:nowrap;font-size:10.5px;
+    letter-spacing:.03em;position:sticky;top:0;background:var(--panel);
+  }
+  thead th:first-child,tbody td:first-child{text-align:center;}
+  thead th.lcol{text-align:left;}
+  tbody td{padding:8px 9px;text-align:right;border-bottom:1px solid rgba(42,50,61,.55);
+    white-space:nowrap;}
+  tbody td.lcol{text-align:left;}
+  tbody tr:hover{background:rgba(255,255,255,.018);}
+  tbody td.adopt{color:var(--accent);font-weight:600;}
+  tbody td.gov{font-weight:600;}
+  tbody td input{
+    width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);
+    border-radius:6px;padding:5px 6px;font-family:'Spline Sans Mono',monospace;
+    font-size:12px;text-align:right;font-weight:600;
+  }
+  tbody td input.matsel{width:128px;text-align:left;}
+  tbody td select{
+    background:var(--panel-2);border:1px solid var(--line);color:var(--blue);
+    border-radius:6px;padding:5px 6px;font-family:'Spline Sans Mono',monospace;font-size:11.5px;
+    max-width:150px;font-weight:600;
+  }
+  tbody td select:focus,tbody td input:focus{outline:none;border-color:var(--blue);}
+  tfoot td{padding:11px 9px;border-top:2px solid var(--line);font-weight:800;text-align:right;}
+  tfoot td.lcol{text-align:left;color:var(--accent);letter-spacing:.05em;}
+  .muted-row td{color:var(--muted);}
+
+  .check{
+    display:inline-flex;align-items:center;gap:7px;font-family:'Spline Sans Mono',monospace;
+    font-size:12px;padding:5px 11px;border-radius:999px;font-weight:600;
+  }
+  .check.ok{background:rgba(52,211,153,.12);color:var(--accent-2);border:1px solid rgba(52,211,153,.3);}
+  .check.bad{background:rgba(255,93,93,.12);color:var(--danger);border:1px solid rgba(255,93,93,.3);}
+
+  .kv{display:grid;grid-template-columns:1fr auto auto;gap:6px 14px;align-items:baseline;
+    font-family:'Spline Sans Mono',monospace;font-size:12.5px;}
+  .kv .lbl{color:var(--muted);}
+  .kv .val{text-align:right;font-weight:600;}
+  .kv .u{color:var(--muted);font-size:11px;min-width:38px;}
+  .kv .note{grid-column:1/-1;color:var(--muted);font-size:11px;font-style:italic;
+    padding:2px 0 8px;border-bottom:1px dashed var(--line);margin-bottom:6px;}
+
+  .formula{
+    font-family:'Spline Sans Mono',monospace;font-size:11px;color:var(--muted);
+    background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--accent);
+    padding:10px 12px;border-radius:8px;margin-top:14px;line-height:1.7;
+  }
+  .formula b{color:var(--ink);}
+  footer.foot{margin-top:40px;color:var(--muted);font-size:11.5px;text-align:center;
+    font-family:'Spline Sans Mono',monospace;line-height:1.7;}
+  .pill{display:inline-block;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:6px;padding:2px 8px;font-size:11px;color:var(--blue);}
+  ::-webkit-scrollbar{height:10px;width:10px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+
+  /* ===================== TAB NAVIGATION ===================== */
+  .tabs{
+    display:flex;gap:4px;flex-wrap:wrap;margin-bottom:26px;
+    border-bottom:1px solid var(--line);padding-bottom:0;
+    position:sticky;top:0;z-index:30;
+    background:linear-gradient(180deg,var(--bg) 60%,rgba(13,17,23,.85));
+    backdrop-filter:blur(6px);
+  }
+  .tab-btn{
+    font-family:'Spline Sans Mono',monospace;font-size:12.5px;font-weight:600;
+    letter-spacing:.04em;cursor:pointer;border:1px solid transparent;border-bottom:none;
+    background:transparent;color:var(--muted);padding:12px 16px;border-radius:10px 10px 0 0;
+    transition:.16s;text-transform:uppercase;display:flex;align-items:center;gap:8px;
+    position:relative;top:1px;
+  }
+  .tab-btn .tnum{
+    background:var(--panel-2);color:var(--muted);font-weight:800;border-radius:6px;
+    min-width:20px;height:20px;padding:0 5px;display:inline-flex;align-items:center;
+    justify-content:center;font-size:11px;transition:.16s;
+  }
+  .tab-btn:hover{color:var(--ink);background:var(--panel);}
+  .tab-btn.active{
+    color:var(--accent);background:var(--panel);
+    border-color:var(--line);border-bottom-color:var(--panel);
+  }
+  .tab-btn.active .tnum{background:var(--accent);color:#1a1300;}
+
+  .tab-panel{display:none;animation:fadein .22s ease;}
+  .tab-panel.active{display:block;}
+  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+  /* layout helpers used inside panels */
+  .panel-grid{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start;}
+  @media(max-width:980px){.panel-grid{grid-template-columns:1fr;}}
+  .stack{display:flex;flex-direction:column;gap:22px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  @media(max-width:760px){.two-col{grid-template-columns:1fr;}}
+  .input-sticky{position:sticky;top:64px;}
+  @media(max-width:980px){.input-sticky{position:static;}}
+
+  @media print{
+    .tabs{display:none;}
+    .tab-panel{display:block !important;page-break-after:always;}
+    .input-sticky{position:static;}
+  }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <h1>Storage Tank Design<span>-API 650</span></h1>
+    </div>
+    <div class="top-actions">
+      <button class="btn" id="resetBtn">Reset</button>
+      <button class="btn" id="loadBtn">Load Saved</button>
+      <button class="btn" id="saveBtn">Save Inputs</button>
+      <button class="btn" id="wordBtn">Export Word</button>
+      <button class="btn" id="pdfBtn">Export PDF</button>
+      <button class="btn primary" id="printBtn">Print / PDF</button>
+    </div>
+  </header>
+
+  <!-- ============ TAB BAR ============ -->
+  <nav class="tabs" id="tabBar">
+    <button class="tab-btn active" data-tab="inputs"><span class="tnum">1</span> Inputs &amp; Summary</button>
+    <button class="tab-btn" data-tab="shell"><span class="tnum">2</span> Shell Courses</button>
+    <button class="tab-btn" data-tab="plates"><span class="tnum">3</span> Bottom · Annular · Roof</button>
+    <button class="tab-btn" data-tab="wind"><span class="tnum">4</span> External Pressure &amp; Wind Girders</button>
+    <button class="tab-btn" data-tab="compring"><span class="tnum">5</span> Compression Ring</button>
+    <button class="tab-btn" data-tab="windload"><span class="tnum">6</span> Wind Load &amp; Overturning</button>
+    <button class="tab-btn" data-tab="spectra"><span class="tnum">7</span> Response Spectra</button>
+    <button class="tab-btn" data-tab="seismic"><span class="tnum">8</span> Seismic Design</button>
+    <button class="tab-btn" data-tab="weights"><span class="tnum">9</span> Weight Summary</button>
+    <button class="tab-btn" data-tab="anchor"><span class="tnum">10</span> Anchorage Design</button>
+  </nav>
+
+  <!-- ============ TAB 1: INPUTS + SUMMARY + CAPACITY ============ -->
+  <section class="tab-panel active" id="tab-inputs">
+    <div class="stack">
+      <div class="card" id="inputCard">
+        <h2><span class="num">1</span> General Information</h2>
+        <div class="body" id="generalInputs"></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <h2><span class="num">∑</span> Design Summary</h2>
+          <div class="summary-grid" id="summary"></div>
+        </div>
+
+        <div class="card">
+          <h2><span class="num">1A</span> Capacity Check</h2>
+          <div class="body">
+            <div class="kv" id="capacity"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2><span class="num">1.4</span> Insulation Detail</h2>
+          <div class="body">
+            <div class="kv" id="insulation"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 2: SHELL COURSES ============ -->
+  <section class="tab-panel" id="tab-shell">
+    <div class="card">
+      <h2><span class="num">2</span> Shell Course Thickness — One-Foot Method</h2>
+      <div class="body">
+        <div class="tablewrap">
+          <table id="shellTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th class="lcol">Material (MOC)</th>
+                <th>CA<br>mm</th>
+                <th>Course<br>m</th>
+                <th>H<sub>d</sub><br>m</th>
+                <th>S<sub>d</sub><br>MPa</th>
+                <th>S<sub>t</sub><br>MPa</th>
+                <th>t<sub>d</sub><br>mm</th>
+                <th>t<sub>d</sub>+CA<br>mm</th>
+                <th>t<sub>t</sub><br>mm</th>
+                <th>Required<br>mm</th>
+                <th>Adopted<br>mm</th>
+                <th>Weight<br>kg</th>
+                <th>Corr. wt<br>kg</th>
+              </tr>
+            </thead>
+            <tbody id="shellBody"></tbody>
+            <tfoot id="shellFoot"></tfoot>
+          </table>
+        </div>
+        <div class="formula">
+          <b>t<sub>d</sub></b> = 4.9 · D · (H<sub>d</sub> + P/9.81·10⁻³ − 0.3) · G / S<sub>d</sub> &nbsp;&nbsp;|&nbsp;&nbsp;
+          <b>t<sub>t</sub></b> = 4.9 · D · (H<sub>t</sub> − 0.3 + P<sub>test</sub>·10⁻³) / S<sub>t</sub><br>
+          Required = max( t<sub>d</sub>+CA , t<sub>t</sub> , t<sub>min</sub> ). Allowable stress = min(2·Y/3, 2·U/5) for S<sub>d</sub>; min(3·Y/4, 3·U/7) for S<sub>t</sub> (API-650 §5.6.2).
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 3: BOTTOM / ANNULAR / ROOF ============ -->
+  <section class="tab-panel" id="tab-plates">
+    <div class="stack">
+      <div class="two-col">
+        <div class="card">
+          <h2><span class="num">⌀</span> Annular Plate Design</h2>
+          <div class="body"><div class="kv" id="annular"></div></div>
+        </div>
+        <div class="card">
+          <h2><span class="num">▭</span> Bottom Plate Design</h2>
+          <div class="body"><div class="kv" id="bottom"></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="num">△</span> Roof Plate Design (Cone Roof)</h2>
+        <div class="body">
+          <div class="kv" id="roof"></div>
+          <div class="formula">
+            <b>W<sub>roof</sub></b> = π · (D/2 + 2·t<sub>adopt,1</sub>)² · t<sub>roof</sub> · ρ · √(1 + (rise/run)²) · 1.1<br>
+            Slope-length factor √(1 + tan²θ) accounts for the cone surface; ×1.1 adds 10% for plate overlap. Corroded weight uses (t<sub>roof</sub> − CA<sub>roof</sub>).
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 4: EXTERNAL PRESSURE & WIND GIRDERS ============ -->
+  <section class="tab-panel" id="tab-wind">
+    <div class="stack">
+      <div class="card">
+        <h2><span class="num">3</span> External Pressure &amp; Intermediate Wind Girders</h2>
+        <div class="body">
+          <div class="kv" id="extpres"></div>
+          <div class="formula">
+            <b>V<sub>design</sub></b> = V · K1 · K2 · K3 · K4 · C<sub>f</sub> &nbsp;|&nbsp;
+            <b>P<sub>z</sub></b> = 0.6 · V<sub>design</sub>² &nbsp;|&nbsp;
+            <b>P<sub>d</sub></b> = max(P<sub>z</sub> · Ka · Kc · C<sub>f</sub>, 0.7 · P<sub>z</sub>) &nbsp;|&nbsp;
+            <b>P<sub>ext,total</sub></b> = (P<sub>d</sub> + max(P<sub>vac</sub>·10⁻³, 0.24)) · 10⁻³ kPa &nbsp;|&nbsp;
+            <b>P<sub>ext,design</sub></b> = max(P<sub>ext,total</sub>, 1.72) kPa<br>
+            <b>H<sub>1</sub></b> (max unstiffened height, §5.9.6.1) = 9.47 · t<sub>min</sub> · (t<sub>min</sub>/D)<sup>1.5</sup> · (1.72 / P<sub>ext,design</sub>) &nbsp;|&nbsp;
+            transposed width W<sub>tr</sub> = Σ W · (t<sub>min</sub>/t)<sup>2.5</sup> &nbsp;|&nbsp;
+            N<sub>stiff</sub> = ROUNDUP(W<sub>tr</sub>/H<sub>1</sub> − 1) &nbsp;|&nbsp; spacing<sub>calc</sub> = W<sub>tr</sub>/(N<sub>stiff</sub>+1)<br>
+            The <b>user-input spacing</b> (editable above) drives the girder location walk and the OK/NOT&nbsp;OK checks: girder <i>k</i> is placed at transposed width <i>k</i> · spacing<sub>user</sub> from the top.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="num">3b</span> Intermediate Wind-Girder Sizing</h2>
+        <div class="body">
+          <div class="tablewrap">
+            <table id="stiffTable">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Auto location<br>from bottom (mm)</th>
+                  <th>Location from<br>bottom (mm)</th>
+                  <th>Dist. from<br>top (mm)</th>
+                  <th>Shell t<br>mm</th>
+                  <th>Web thk<br>mm</th>
+                  <th>Web len<br>mm</th>
+                  <th>Flange thk<br>mm</th>
+                  <th>Flange ht<br>mm</th>
+                  <th>Z<sub>req</sub><br>mm³</th>
+                  <th>Z<sub>prov</sub><br>mm³</th>
+                  <th>Weight<br>kg</th>
+                  <th>Check</th>
+                </tr>
+              </thead>
+              <tbody id="stiffBody"></tbody>
+              <tfoot id="stiffFoot"></tfoot>
+            </table>
+          </div>
+          <div class="formula">
+            <b>Z<sub>required</sub></b> = (6 · F · 10⁻³ · D² / (0.5 · min(F<sub>y,allow</sub>, 210)) · (P<sub>ext,design</sub>/1.72)) · 10³, with F = (H<sub>shell</sub> − location) in mm.<br>
+            Built-up section (shell strip + web + flange): effective shell width = 16·t<sub>shell</sub>·2 + t<sub>web</sub>. <b>Z<sub>provided</sub></b> = I<sub>final</sub> / X̄ about the composite neutral axis. Adopt when Z<sub>provided</sub> ≥ Z<sub>required</sub>.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="num">3c</span> Top Stiffener (Top Wind Girder)</h2>
+        <div class="body">
+          <div class="kv" id="topstiff"></div>
+          <div class="formula">
+            <b>Q</b> = W<sub>tr</sub> · 10⁶ · H<sub>shell</sub> / 4 (N/m). Effective shell width = 1.56·√(D·0.5·10³·t<sub>shell</sub>) + t<sub>web</sub>. I<sub>provided</sub> from the built-up composite section. (The workbook's I<sub>z,required</sub> reference is broken — supply the project value to complete the check.)
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 5: COMPRESSION RING ============ -->
+  <section class="tab-panel" id="tab-compring">
+    <div class="stack">
+      <div class="two-col">
+        <div class="card">
+          <h2><span class="num">4</span> Compression Ring — Area Required &amp; Available</h2>
+          <div class="body"><div class="kv" id="compReqAvail"></div></div>
+        </div>
+        <div class="card">
+          <h2><span class="num">4b</span> Compression Ring — Detail Selection</h2>
+          <div class="body"><div class="kv" id="compDetail"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2><span class="num">∑</span> Compression Ring Result</h2>
+        <div class="body">
+          <div class="kv" id="compResult"></div>
+          <div class="formula">
+            <b>A<sub>req</sub></b> = 200·D²·(P·0.00981 − 0.00127·W<sub>roof,corr</sub>·9.81/D²) / (Y·tanθ), D in metres.<br>
+            Participating shell width = 0.6·√(0.5·D·(t<sub>1</sub>−CA<sub>1</sub>)); participating roof width = min(0.3·√(0.5·D/sinθ·(t<sub>roof</sub>−CA<sub>roof</sub>)), 300).
+            Detail areas (h, i, j, k) per Appendix-F of API-650. The governing minimum additional area drives the ring weight.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 6: WIND LOAD & OVERTURNING (sheet 5_Wind load) ============ -->
+  <section class="tab-panel" id="tab-windload">
+    <div class="stack">
+      <div class="two-col">
+        <div class="card">
+          <h2><span class="num">5</span> Wind Load — Inputs &amp; Design Wind Pressure</h2>
+          <div class="body"><div class="kv" id="wlInputs"></div></div>
+        </div>
+        <div class="card">
+          <h2><span class="num">5b</span> Shear, Uplift &amp; Overturning Moment</h2>
+          <div class="body"><div class="kv" id="wlMoment"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2><span class="num">5c</span> Stability Check in Wind Condition (Unanchored Tank — §5.11)</h2>
+        <div class="body">
+          <div class="kv" id="wlStability"></div>
+          <div class="formula">
+            Three conditions per API-650 §5.11.2 must all be satisfied for an unanchored tank:<br>
+            <b>(1)</b> 0.6·M<sub>w</sub> + M<sub>pi</sub> &lt; M<sub>DL</sub>/1.5 + M<sub>DLR</sub> &nbsp;·&nbsp;
+            <b>(2)</b> M<sub>w</sub> + F<sub>p</sub>·M<sub>pi</sub> &lt; (M<sub>DL</sub>+M<sub>F</sub>)/2 + M<sub>DLR</sub> &nbsp;·&nbsp;
+            <b>(3)</b> M<sub>ws</sub> + F<sub>p</sub>·M<sub>pi</sub> &lt; M<sub>DL</sub>/1.5 + M<sub>DLR</sub><br>
+            If any condition fails, anchorage is required. M<sub>pi</sub> uses design internal pressure; M<sub>pop</sub> (operating, with F<sub>p</sub>=1) is used in conditions 2 &amp; 3 per the source workbook.
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2><span class="num">5d</span> Width of Annular Plate for Wind Condition (Cl. 5.11.2.3.2)</h2>
+        <div class="body"><div class="kv" id="wlAnnular"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 7: RESPONSE SPECTRA ============ -->
+  <section class="tab-panel" id="tab-spectra">
+    <div class="stack">
+      <div class="two-col">
+        <div class="card">
+          <h2><span class="num">7</span> Spectral Acceleration Lookup (5% Damping)</h2>
+          <div class="body"><div class="kv" id="spInputs"></div></div>
+        </div>
+        <div class="card">
+          <h2><span class="num">7b</span> Damping &amp; Behaviour Adjustment</h2>
+          <div class="body">
+            <div class="kv" id="spAdjust"></div>
+            <div class="formula">
+              Spectral accelerations are read from the OBE/OLE 5%-damped design spectrum by linear
+              interpolation at the impulsive period T<sub>i</sub> and convective period T<sub>c</sub>. The OLE design
+              coefficients used downstream are taken from the user inputs A<sub>i</sub>, A<sub>c</sub>, A<sub>v</sub>
+              (workbook cells P29:P31) so the seismic sheet reproduces the source result exactly.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2><span class="num">7c</span> 5%-Damped Design Spectrum (Period vs Horizontal Acceleration)</h2>
+        <div class="body">
+          <div style="overflow:auto;">
+            <table id="spTable" style="min-width:520px;">
+              <thead><tr><th>Period (s)</th><th>OBE / OLE — Horizontal</th><th></th><th></th></tr></thead>
+              <tbody id="spTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 8: SEISMIC DESIGN ============ -->
+  <section class="tab-panel" id="tab-seismic">
+    <div class="stack">
+      <div class="two-col">
+        <div class="card">
+          <h2><span class="num">8</span> Seismic Inputs &amp; Parameters</h2>
+          <div class="body"><div class="kv" id="seisInputs"></div></div>
+        </div>
+        <div class="card">
+          <h2><span class="num">8b</span> Periods, Masses &amp; Coefficients (OLE)</h2>
+          <div class="body"><div class="kv" id="seisMass"></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2><span class="num">8x</span> Shell Centroid (X<sub>s</sub>) Calculation — thickness-weighted</h2>
+        <div class="body">
+          <div style="overflow:auto;">
+            <table id="xsTable" style="min-width:560px;">
+              <thead><tr>
+                <th>Course</th>
+                <th>Course length<br>m</th>
+                <th>Adopted t<br>mm</th>
+                <th>Height to mid-course<br>from bottom (m)</th>
+                <th>D·t·(Σ below + len/2)<br>Xs calculation</th>
+              </tr></thead>
+              <tbody id="xsBody"></tbody>
+              <tfoot id="xsFoot"></tfoot>
+            </table>
+          </div>
+          <div class="formula">
+            <b>X<sub>s</sub></b> = Σ[ L<sub>i</sub> · t<sub>i</sub> · (h<sub>below,i</sub> + L<sub>i</sub>/2) ] / Σ[ L<sub>i</sub> · t<sub>i</sub> ], measured from the tank bottom (workbook <i>2_Thickness</i> column T). L = course length, t = adopted thickness, h<sub>below</sub> = sum of course lengths below the course. This feeds the height-to-shell-COG (X<sub>s</sub>) used in the seismic base shear and overturning moment.
+          </div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <h2><span class="num">8c</span> Base Shear &amp; Overturning (Ringwall) Moment</h2>
+          <div class="body"><div class="kv" id="seisShear"></div></div>
+        </div>
+        <div class="card">
+          <h2><span class="num">8d</span> Anchorage Ratio &amp; Shell Compression (§E.6.2.2)</h2>
+          <div class="body">
+            <div class="kv" id="seisComp"></div>
+            <div class="formula">
+              Anchorage ratio J governs the longitudinal shell-compression formula. For a mechanically anchored tank
+              σ<sub>c</sub> = (w<sub>t</sub>(1+0.4A<sub>v</sub>) + 1.273·M<sub>rw</sub>/D²)/(1000·t<sub>s</sub>). The
+              allowable F<sub>c</sub> switches at parameter A = G·H·D²/t<sub>s</sub>² = 44.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2><span class="num">8e</span> Dynamic Liquid Hoop Forces — OLE Case (per shell course)</h2>
+        <div class="body">
+          <div style="overflow:auto;">
+            <table id="hoopTableOLE" style="min-width:880px;">
+              <thead><tr>
+                <th>Course</th><th>Y<br>m</th><th>P<sub>s</sub><br>N/m</th><th>P<sub>i</sub><br>N/m</th>
+                <th>P<sub>c</sub><br>N/m</th><th>P<sub>v</sub><br>N/m</th><th>t<sub>corr</sub><br>mm</th>
+                <th>N<sub>RSS</sub><br>N/mm</th><th>Allow.<br>MPa</th><th>Check</th>
+              </tr></thead>
+              <tbody id="hoopBodyOLE"></tbody>
+            </table>
+          </div>
+          <div class="kv" id="seisFreeboard" style="margin-top:14px;"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 9: WEIGHT SUMMARY ============ -->
+  <section class="tab-panel" id="tab-weights">
+    <div class="stack">
+      <div class="two-col">
+        <div class="card">
+          <h2><span class="num">9</span> Component Weight Summary</h2>
+          <div class="body"><div class="kv" id="wtSummary"></div></div>
+        </div>
+        <div class="card">
+          <h2><span class="num">9b</span> Dead Load &amp; Seismic Force Summary</h2>
+          <div class="body">
+            <div class="kv" id="wtSeismic"></div>
+            <div class="formula">
+              Dead load of tank excluding bottom/annular plate W<sub>s</sub> = shell + stiffeners + compression ring +
+              roof plate + roof structure + roof &amp; shell insulation. Shear force and bending moment below are the
+              seismic base shear V and ringwall moment M<sub>rw</sub> converted to tonne and tonne·m for the OLE (OBE)
+              case.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 10: ANCHORAGE DESIGN ============ -->
+  <section class="tab-panel" id="tab-anchor">
+    <div class="stack">
+      <div class="two-col">
+        <div class="card">
+          <h2><span class="num">10</span> Anchorage Inputs</h2>
+          <div class="body"><div class="kv" id="anchInputs"></div></div>
+        </div>
+        <div class="card">
+          <h2><span class="num">10b</span> Bolt Properties &amp; Sizing</h2>
+          <div class="body">
+            <div class="kv" id="anchBolt"></div>
+            <div class="formula">
+              Anchor bolt root area is taken from the standard metric bolt table (M10–M100), reduced by a 6&nbsp;mm
+              corrosion allowance on the root diameter. Required bolt count N = U<sub>max</sub> / (A<sub>corr</sub> ·
+              f<sub>allow</sub>); spacing = π·BCD / N. Bolt yield is capped at 380&nbsp;MPa per API-650 Table 5.20a.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h2><span class="num">10c</span> Uplift Load Cases (API-650 Table 5.20)</h2>
+        <div class="body">
+          <div style="overflow:auto;">
+            <table id="anchTable" style="min-width:760px;">
+              <thead><tr>
+                <th>#</th><th>Uplift load case</th><th>Net uplift formula, U</th>
+                <th>Net uplift, U<br>(kg)</th><th>Allowable<br>(MPa)</th>
+              </tr></thead>
+              <tbody id="anchBody"></tbody>
+            </table>
+          </div>
+          <div class="kv" id="anchResult" style="margin-top:14px;"></div>
+          <div class="formula" style="margin-top:10px;">
+            W<sub>1</sub> = corroded weight of roof plates + shell + permanent attachments on the shell.
+            W<sub>2</sub> = corroded weight of shell + attachments including the portion of roof plates/framing acting
+            on the shell. A<sub>v</sub> is the vertical earthquake acceleration coefficient; F<sub>p</sub> the pressure
+            combination factor (min 0.7). The governing case is the maximum net uplift across all load combinations.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    Calculations follow API-650 one-foot method (§5.6), bottom/annular provisions (§5.4–5.5), wind overturning stability (§5.11), seismic provisions (Annex E) and mechanical anchorage (§5.12, Table 5.20).<br>
+    For preliminary engineering use — verify against the controlling edition of API-650 and project specifications before fabrication.
+  </footer>
+</div>
+
+<script>
+/* ===================== MATERIAL DATABASE (API-650 Table 5.2a, SI) ===================== */
+/* Each: name, yield Y (MPa), tensile U (MPa), tabulated Sd (Ed), tabulated St (Fd).
+   Final Sd = min( min(2Y/3,2U/5), tabulatedSd ); Final St = min( tabulatedSt, min(3Y/4,3U/7) ). */
+const MATERIALS = [
+  ["IS 2062 Gr. E250 Quality BR", 240, 410, 160, 175.7142857],
+  ["A283M Gr. C", 205, 380, 137, 154],
+  ["A285M Gr. C", 205, 380, 137, 154],
+  ["A131M Gr. A, B", 235, 400, 157, 171],
+  ["A36M", 250, 400, 160, 171],
+  ["A131M Gr. EH 36", 360, 490, 196, 210],
+  ["A573M Gr. 400", 220, 400, 147, 165],
+  ["A573M Gr. 450", 240, 450, 160, 180],
+  ["A573M Gr. 485", 290, 485, 193, 208],
+  ["A516M Gr. 380", 205, 380, 137, 154],
+  ["A516M Gr. 415", 220, 415, 147, 165],
+  ["A516M Gr. 450", 240, 450, 160, 180],
+  ["A516M Gr. 485", 260, 485, 173, 195],
+  ["A662M Gr. B", 275, 450, 180, 193],
+  ["A662M Gr. C", 295, 485, 194, 208],
+  ["A537M Cl. 1 (t ≤ 65)", 345, 485, 194, 208],
+  ["A537M Cl. 1 (65 < t ≤ 100)", 310, 450, 180, 193],
+  ["A537M Cl. 2 (t ≤ 65)", 415, 550, 220, 236],
+  ["A537M Cl. 2 (65 < t ≤ 100)", 380, 515, 206, 221],
+  ["A633M Gr. C,D (t ≤ 65)", 345, 485, 194, 208],
+  ["A633M Gr. C,D (65 < t ≤ 100)", 315, 450, 180, 193],
+  ["A737M Gr. B", 345, 485, 194, 208],
+  ["A841M Class 1, Grades A and B", 345, 485, 194, 208],
+  ["A841M Class 2, Grades A and B", 415, 550, 220, 236],
+  ["CSA G40.21M Gr.260W", 260, 410, 164, 176],
+  ["CSA G40.21M Gr. 260WT", 260, 410, 164, 176],
+  ["CSA  G40.21M Gr. 300W", 300, 440, 176, 189],
+  ["CSA  G40.21M Gr. 300WT", 300, 440, 176, 189],
+  ["CSA  G40.21M Gr. 350W", 350, 450, 180, 193],
+  ["CSA G40.21M Gr. 350WT (t ≤ 65)", 350, 450, 180, 193],
+  ["CSA G40.21M Gr. 350WT (65 < t ≤ 100)", 320, 450, 180, 193],
+  ["ISO 630 Gr. S275 C, D (t ≤ 16)", 275, 410, 164, 176],
+  ["ISO 630 Gr. S275 C, D (16 < t ≤ 40)", 265, 410, 164, 176],
+  ["ISO 630 Gr. S355 C, D (t ≤ 16)", 355, 470, 188, 201],
+  ["ISO 630 Gr. S355 C, D (16 < t ≤ 40)", 345, 470, 188, 201],
+  ["ISO 630 Gr. S355 C, D (40 < t ≤ 50)", 335, 470, 188, 201],
+  ["EN 10025 Gr. S275 J0, J2 (t ≤ 16)", 275, 410, 164, 176],
+  ["EN 10025 Gr. S275 J0, J2 16 < t ≤ 40)", 265, 410, 164, 176],
+  ["EN 10025 Gr. S355 J0, J2, K2 (t ≤ 16)", 355, 470, 188, 201],
+  ["EN 10025 Gr. S355 J0, J2, K2 (16 < t ≤ 40)", 345, 470, 188, 201],
+  ["EN 10025 Gr. S355 J0, J2, K2 (40 < t ≤ 50)", 335, 470, 188, 201],
+];
+const MATMAP = {};
+MATERIALS.forEach(m=>{
+  const [name,Y,U,Ed,Fd]=m;
+  let Sd=null,St=null;
+  if(Y!=null){
+    const fSd=Math.min(2*Y/3, 2*U/5);
+    const fSt=Math.min(3*Y/4, 3*U/7);
+    Sd=Math.min(fSd, Ed);   // Final Sd  (VLOOKUP col 8 = AI)
+    St=Math.min(Fd, fSt);   // Final St  (VLOOKUP col 9 = AJ)
+  }
+  MATMAP[name]={Y,U,Sd,St};
+});
+
+/* ===================== DEFAULT STATE (workbook B224 / HRRL) ===================== */
+const DEFAULTS = {
+  jobNo:"B224", client:"M/s HRRL", equip:"130-TT-00-037", service:"PFCCU",
+  tankType:"Cone roof", code:"API-650",
+  Pint:300, Ptest:375, Pop:150, Pext:50, SG:0.75, jointEff:1,
+  // ---- Insulation detail (sheet "1_General information", rows 34-38) ----
+  shellInsThk:50, shellInsDens:200, roofInsThk:50, roofInsDens:200,
+  D:30000, shellH:17000, Hd:16200, normalLvl:15000,
+  designTemp:50, ambTemp:44, tmin:8, density:7850,
+  LLL:1900,
+  annMatl:"IS 2062 Gr. E250 Quality BR", annProvided:12, annCA:3, annUserWidth:1200,
+  bottomToAnnularLap:60, minProjection:60, bottomThk:8,
+  roofSlopeRise:1, roofSlopeRun:12, roofCA:1, roofThk:6,
+  // ---- External pressure (sheet "3_External pressure") ----
+  windVel:39, K1:0.9918, K2:1.05, K3:1, K4:1, Kd:1, Ka:1, Kc:1, contFactor:1, extMinCorrThk:5,
+  // USER INPUT for spacing of stiffeners (workbook J22), m. Drives girder location walk & checks.
+  stiffSpacingUser:2.23,
+  // Intermediate wind-girder sizing inputs (blue cells, rows 77-87). loc=null -> auto from algorithm.
+  stiffeners:[
+    {loc:null, shellT:7,    webT:14, webL:200, flT:14, flH:150},
+    {loc:null, shellT:5,    webT:8,  webL:120, flT:8,  flH:150},
+    {loc:null, shellT:13.2, webT:10, webL:240, flT:10, flH:50},
+    {loc:null, shellT:13.2, webT:10, webL:240, flT:10, flH:50},
+    {loc:null, shellT:16,   webT:14, webL:700, flT:14, flH:50},
+    {loc:null, shellT:10,   webT:10, webL:180, flT:10, flH:50},
+    {loc:null, shellT:10,   webT:10, webL:180, flT:10, flH:50},
+    {loc:null, shellT:10,   webT:10, webL:180, flT:10, flH:50},
+    {loc:null, shellT:10,   webT:10, webL:180, flT:10, flH:50},
+    {loc:null, shellT:10,   webT:10, webL:180, flT:10, flH:50},
+    {loc:null, shellT:10,   webT:10, webL:180, flT:10, flH:50},
+  ],
+  // Top stiffener (blue cells row 202) + project Iz,required (workbook ref broken)
+  topStiff:{shellT:16, webT:14, webL:700, flT:14, flH:230, IzReq:null},
+  // ---- Compression ring (sheet "4_Compression ring") blue/editable cells ----
+  // crTopShellThk (D9), crTopShellCA (D10), curb angle legs+thk (D22/F22/H22),
+  // bar thickness tcr (D28), thickened shell plate ts (D31)
+  crTopShellThk:8, crTopShellCA:3, crCurbA:75, crCurbB:75, crCurbT:10,
+  crTcr:20, crTs:20,
+  // crMOC (D3): Roof MOC for compression ring (user input, drives yield D4 via material DB)
+  crMOC:"IS 2062 Gr. E250 Quality BR",
+  // ---- Wind load & overturning (sheet "5_Wind load") blue/editable cells ----
+  wlShapeFactor:0.7,        // J4  Cf shape factor for tank
+  wlCpe:0.753,              // J5  coefficient of external pressure
+  wlWindVel:39,             // J7  wind velocity (m/s)  [sheet-5 specific]
+  wlTankHeight:17,          // J8  tank height (m)       [sheet-5 specific]
+  // Probability/terrain factors for the three height bands (10 m / 15 m / 20 m)
+  wlK1_10:0.9918, wlK2_10:0.98, wlK3_10:1, wlK4_10:1, wlKd_10:1, wlKa_10:1, wlKc_10:1, wlCont_10:1,
+  wlK1_15:0.9918, wlK2_15:1.02, wlK3_15:1, wlK4_15:1, wlKd_15:1, wlKa_15:1, wlKc_15:1, wlCont_15:1,
+  wlK1_20:0.9918, wlK2_20:1.05, wlK3_20:1, wlK4_20:1, wlKd_20:1, wlKa_20:1, wlKc_20:1, wlCont_20:1,
+  wlShellSelfWt:214910.48,  // J36 self weight of shell (uncorroded) resisting uplift, kg
+  wlRoofSelfWt:43842.4,     // J37 self weight of roof (uncorroded) resisting uplift, kg
+  wlFp:0.4,                 // Fp pressure combination factor used in conditions 2 & 3
+  // ---- Seismic / Response spectra (sheets "6_Spectra", "7_Seismic") blue/editable cells ----
+  seisE:196917.6,           // 7_Seismic J4  elastic modulus of tank material, MPa
+  seisCi:6.31,              // 7_Seismic J11 Ci coefficient from the curve (6 to 9.5)
+  seisXr:17,                // 7_Seismic J13 height to roof+appurtenances COG, m
+  seisXs:7.34,              // 7_Seismic J14 height to shell COG, m
+  // 7_Seismic J15/J16/J17 user-input weights (N). null -> use auto-calculated value.
+  seisWs:null, seisWr:null, seisWp:null,
+  seisAnchor:"Mechanically Anchored", // 7_Seismic J43 self / mechanically anchored
+  seisAdjImp:1.4,           // 6_Spectra P19 adjustment factor, impulsive mode (OBE/OLE)
+  seisAdjConv:1.9,          // 6_Spectra P21 adjustment factor, convective mode (OBE/OLE)
+  seisAi:0.15,              // 6_Spectra P29 user input Ai (OLE) horizontal impulsive coeff
+  seisAc:0.0672,            // 6_Spectra P30 user input Ac (OLE) horizontal convective coeff
+  seisAv:0.1005,            // 6_Spectra P31 user input Av (OLE) vertical coeff
+  crRoofStructWt:30945,     // 1_General information C42 weight of roof structure, kg
+  // ---- Anchorage design (sheet "9_Anchor") blue/editable cells ----
+  anchRequired:"YES",       // D4  is anchorage required? (YES/NO)
+  anchBoltDia:"M30",        // D6  anchor bolt size (M-designation, looked up in bolt table)
+  anchNumBolts:92,          // D8  number of anchor bolts (user can override the computed minimum)
+  anchBCD:30140,            // D9  anchor bolt circle diameter, mm
+  anchBoltYield:250,        // D10 yield stress of anchor bolt MOC, MPa (max 380 per Table 5.20a)
+  anchBoltCA:6,             // corrosion allowance on bolt root diameter (mm) — AE col = AD-6
+  // ---- 5%-damped design spectrum (sheet 6_Spectra D5:G44): [period s, OBE/OLE horiz, SSE/CLE horiz] ----
+  // User-editable; drives the spectral acceleration lookup at Ti and Tc.
+  spectrum:[
+    [0,0.15,0.25],[0.01,0.15,0.25],[0.05,0.25,0.417],[0.1,0.375,0.625],
+    [0.275,0.375,0.625],[0.45,0.375,0.625],[0.625,0.375,0.625],[0.8,0.375,0.625],
+    [1.06,0.283,0.472],[1.32,0.227,0.379],[1.58,0.19,0.316],[1.84,0.163,0.272],
+    [2.1,0.143,0.238],[2.36,0.127,0.212],[2.62,0.115,0.191],[2.88,0.104,0.174],
+    [3.14,0.096,0.159],[3.4,0.088,0.147],[3.66,0.082,0.137],[3.92,0.077,0.128],
+    [4.18,0.072,0.12],[4.44,0.068,0.113],[4.7,0.064,0.106],[4.96,0.06,0.101],
+    [5.22,0.057,0.096],[5.48,0.055,0.091],[5.74,0.052,0.087],[6,0.05,0.083],
+    [6.5,0.043,0.071],[7,0.037,0.061],[7.5,0.032,0.053],[8,0.028,0.047],
+    [8.5,0.025,0.042],[9,0.022,0.037],[9.5,0.02,0.033],[10,0.018,0.03],
+    [10.5,0.016,0.027],[11,0.015,0.025],
+  ],
+  courses:[
+    {moc:"IS 2062 Gr. E250 Quality BR", ca:3, len:3,  adopt:28},
+    {moc:"IS 2062 Gr. E250 Quality BR", ca:3, len:3,  adopt:26},
+    {moc:"IS 2062 Gr. E250 Quality BR", ca:3, len:3,  adopt:22},
+    {moc:"IS 2062 Gr. E250 Quality BR", ca:3, len:3,  adopt:18},
+    {moc:"IS 2062 Gr. E250 Quality BR", ca:3, len:3,  adopt:12},
+    {moc:"IS 2062 Gr. E250 Quality BR", ca:3, len:3,  adopt:10},
+    {moc:"IS 2062 Gr. E250 Quality BR", ca:3, len:0.5,adopt:10},
+  ]
+};
+let S = JSON.parse(JSON.stringify(DEFAULTS));
+
+/* ===================== HELPERS ===================== */
+const $=id=>document.getElementById(id);
+const fmt=(n,d=2)=>{ if(n==null||isNaN(n))return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); };
+const PI=Math.PI;
+
+/* ===================== INPUT PANEL ===================== */
+const GEN_FIELDS = [
+  ["sec","Project"],
+  ["jobNo","Job No.","text"],
+  ["client","Client","text"],
+  ["equip","Equipment No.","text"],
+  ["service","Service","text"],
+  ["tankType","Tank type","text"],
+  ["code","Design code","text"],
+  ["sec","Pressures & Material"],
+  ["Pint","Design internal pressure","num","mmWC"],
+  ["Ptest","Test pressure","num","mmWC"],
+  ["Pop","Operating pressure","num","mmWC"],
+  ["Pext","Design external pressure","num","mmWC"],
+  ["SG","Specific gravity (design)","num",""],
+  ["jointEff","Joint efficiency","num",""],
+  ["density","Density of tank material","num","kg/m³"],
+  ["sec","Geometry"],
+  ["D","Inside diameter of tank","num","mm"],
+  ["shellH","Tank shell height","num","mm"],
+  ["Hd","Max design liquid level (Hd)","num","mm"],
+  ["normalLvl","Max normal operating level","num","mm"],
+  ["tmin","Minimum thickness","num","mm"],
+  ["LLL","LLL / min operating level","num","mm"],
+  ["sec","Temperatures"],
+  ["designTemp","Design temperature","num","°C"],
+  ["ambTemp","Design ambient temperature","num","°C"],
+  ["sec","Insulation detail"],
+  ["shellInsThk","Shell insulation thickness","num","mm"],
+  ["shellInsDens","Shell insulation density","num","kg/m³"],
+  ["roofInsThk","Roof insulation thickness","num","mm"],
+  ["roofInsDens","Roof insulation density","num","kg/m³"],
+  ["sec","Roof Structure detail"],
+  ["crRoofStructWt","Weight of roof structure","num","kg"],
+  ["sec","External Pressure (Wind)"],
+  ["windVel","Wind velocity","num","m/s"],
+  ["K1","K1 (size/height factor)","num",""],
+  ["K2","K2 (terrain factor)","num",""],
+  ["K3","K3","num",""],
+  ["K4","K4","num",""],
+  ["Kd","Kd (wind directionality)","num",""],
+  ["Ka","Ka (area averaging)","num",""],
+  ["Kc","Kc (combination factor)","num",""],
+  ["contFactor","Contingency factor","num",""],
+  ["extMinCorrThk","Min. corroded thickness (shell)","num","mm"],
+];
+function buildInputs(){
+  const host=$("generalInputs"); host.innerHTML="";
+  let grid=null;   // current section's field grid
+  GEN_FIELDS.forEach(f=>{
+    if(f[0]==="sec"){
+      const d=document.createElement("div");
+      d.className="section-label"; d.textContent=f[1]; host.appendChild(d);
+      grid=document.createElement("div"); grid.className="field-grid"; host.appendChild(grid);
+      return;
+    }
+    const [key,label,type,unit]=f;
+    const wrap=document.createElement("div"); wrap.className="field";
+    const lab=document.createElement("label"); lab.textContent=label; lab.title=label; wrap.appendChild(lab);
+    const row=document.createElement("div"); row.className="input-row";
+    const inp=document.createElement("input");
+    if(type==="text"){ inp.type="text"; }
+    else { inp.type="text"; inp.setAttribute("inputmode","decimal"); inp.step="any"; }
+    inp.value=S[key];
+    inp.addEventListener("input",()=>{
+      S[key]= type==="text"? inp.value : parseFloat(inp.value);
+      compute();
+    });
+    row.appendChild(inp);
+    if(unit){ const u=document.createElement("span"); u.className="unit"; u.textContent=unit; row.appendChild(u); }
+    wrap.appendChild(row);
+    (grid||host).appendChild(wrap);
+  });
+}
+
+/* ===================== SHELL TABLE ===================== */
+function buildShellTable(){
+  const body=$("shellBody"); body.innerHTML="";
+  S.courses.forEach((c,i)=>{
+    const tr=document.createElement("tr");
+    // # 
+    tr.innerHTML=`<td>${i+1}</td>`;
+    // material select
+    const tdM=document.createElement("td"); tdM.className="lcol";
+    const sel=document.createElement("select");
+    MATERIALS.forEach(m=>{ const o=document.createElement("option"); o.value=m[0]; o.textContent=m[0]; if(m[0]===c.moc)o.selected=true; sel.appendChild(o); });
+    sel.addEventListener("change",()=>{c.moc=sel.value;compute();});
+    tdM.appendChild(sel); tr.appendChild(tdM);
+    // CA
+    tr.appendChild(numCell(c,"ca"));
+    // length
+    tr.appendChild(numCell(c,"len"));
+    // remaining computed cells (filled in compute)
+    ["hd","sd","st","td","tdca","tt","req"].forEach(()=>{ const td=document.createElement("td"); tr.appendChild(td); });
+    // adopted (editable)
+    tr.appendChild(numCell(c,"adopt","adopt"));
+    // weight, corr weight
+    ["wt","cwt"].forEach(()=>{ const td=document.createElement("td"); tr.appendChild(td); });
+    body.appendChild(tr);
+  });
+  // controls row
+  const ctrl=document.createElement("tr"); ctrl.className="muted-row";
+  ctrl.innerHTML=`<td colspan="14" class="lcol" style="text-align:left;padding-top:10px;">
+    <button class="btn" id="addCourse" style="padding:6px 12px;">+ Add course</button>
+    <button class="btn" id="delCourse" style="padding:6px 12px;">− Remove last</button></td>`;
+  body.appendChild(ctrl);
+  $("addCourse").onclick=()=>{ S.courses.push({moc:"A283M Gr. C",ca:3,len:3,adopt:10}); buildShellTable(); compute(); };
+  $("delCourse").onclick=()=>{ if(S.courses.length>1){S.courses.pop(); buildShellTable(); compute();} };
+}
+function numCell(obj,key,cls){
+  const td=document.createElement("td"); if(cls)td.className=cls;
+  const inp=document.createElement("input"); inp.type="text"; inp.setAttribute("inputmode","decimal"); inp.step="any"; inp.value=obj[key];
+  inp.addEventListener("input",()=>{obj[key]=parseFloat(inp.value);compute();});
+  td.appendChild(inp); return td;
+}
+
+/* ===================== SPECTRUM TABLE (built once; not rebuilt on cell edits) ===================== */
+let _spRowCount = -1;   // tracks how many rows are currently in the DOM table
+function renderSpectrumTable(force){
+  const host=$("spTableBody"); if(!host) return;
+  // Only (re)build the DOM when the row count changed (add/delete/reset) or when forced.
+  // Editing a value must NOT rebuild, or the input being typed in would be destroyed.
+  if(!force && _spRowCount===S.spectrum.length && host.querySelector("input[data-sr]")) return;
+  _spRowCount = S.spectrum.length;
+  const spc="background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:5px;padding:4px 6px;font-family:'Spline Sans Mono';font-size:12.5px;text-align:right;font-weight:700;width:84px;";
+  host.innerHTML = S.spectrum.map((r,i)=>`<tr>
+      <td><input type="text" inputmode="decimal" step="any" data-sr="${i}" data-sc="0" value="${r[0]}" style="${spc}"></td>
+      <td><input type="text" inputmode="decimal" step="any" data-sr="${i}" data-sc="1" value="${r[1]}" style="${spc}"></td>
+      <td><input type="text" inputmode="decimal" step="any" data-sr="${i}" data-sc="2" value="${r[2]}" style="${spc}"></td>
+      <td><button class="btn" data-spdel="${i}" style="padding:3px 9px;font-size:11px;">−</button></td>
+    </tr>`).join("") + `<tr class="muted-row"><td colspan="4" style="text-align:left;padding-top:10px;">
+      <button class="btn" id="spAddRow" style="padding:6px 12px;">+ Add period</button>
+      <button class="btn" id="spResetTable" style="padding:6px 12px;">↺ Reset to default spectrum</button>
+      <span style="color:var(--muted);font-size:11px;margin-left:8px;">Edit any cell freely; accelerations at T<sub>i</sub>/T<sub>c</sub> update as you type. Rows are sorted by period for interpolation.</span>
+    </td></tr>`;
+  // Cell edits: update state and refresh ONLY the readout panels (never rebuild this table).
+  host.querySelectorAll("input[data-sr]").forEach(inp=>{
+    inp.addEventListener("input",e=>{
+      const ri=+e.target.dataset.sr, ci=+e.target.dataset.sc;
+      const raw=e.target.value;
+      // keep partial entries like "" or "0." usable; store 0 only when truly not a number
+      const v=parseFloat(raw);
+      S.spectrum[ri][ci]= (raw===""||isNaN(v))?0:v;
+      updateSpectrumReadouts();
+    });
+  });
+  host.querySelectorAll("button[data-spdel]").forEach(btn=>{
+    btn.onclick=()=>{ if(S.spectrum.length>2){ S.spectrum.splice(+btn.dataset.spdel,1); renderSpectrumTable(true); updateSpectrumReadouts(); } };
+  });
+  const addBtn=$("spAddRow");
+  if(addBtn) addBtn.onclick=()=>{
+    const lastP = S.spectrum.length? Math.max(...S.spectrum.map(r=>+r[0])) : 0;
+    S.spectrum.push([+(lastP+0.5).toFixed(3),0,0]); renderSpectrumTable(true); updateSpectrumReadouts();
+  };
+  const resetBtn=$("spResetTable");
+  if(resetBtn) resetBtn.onclick=()=>{ S.spectrum=JSON.parse(JSON.stringify(DEFAULTS.spectrum)); renderSpectrumTable(true); updateSpectrumReadouts(); };
+}
+// Refresh just the interpolated-acceleration readouts (Spectra tab) from current S.spectrum.
+function updateSpectrumReadouts(){
+  if(!$("spInputs")||!window._seisPeriods) return;
+  const {Ti,Tc}=window._seisPeriods;
+  const SP=(S.spectrum||[]).filter(r=>Array.isArray(r)&&r.length>=3&&r.every(v=>v!=null&&!isNaN(v))).map(r=>[+r[0],+r[1],+r[2]]).sort((a,b)=>a[0]-b[0]);
+  const at=(T,col)=>{
+    if(SP.length===0) return 0;
+    if(T<=SP[0][0]) return SP[0][col];
+    const last=SP[SP.length-1]; if(T>=last[0]) return last[col];
+    for(let i=0;i<SP.length-1;i++){ const a=SP[i],b=SP[i+1]; if(T>=a[0]&&T<=b[0]){ const dx=b[0]-a[0]; return a[col]+(dx?(b[col]-a[col])/dx:0)*(T-a[0]); } }
+    return last[col];
+  };
+  const f=(n,d=4)=>isNaN(n)?"—":Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});
+  $("spInputs").innerHTML=`
+    <div class="lbl">Time period — impulsive (T<sub>i</sub>)</div><div class="val" style="color:var(--accent-2)">${f(Ti)}</div><div class="u">s</div>
+    <div class="lbl">Time period — convective (T<sub>c</sub>)</div><div class="val" style="color:var(--accent-2)">${f(Tc)}</div><div class="u">s</div>
+    <div class="lbl">Horiz. accel. at T<sub>i</sub> (OBE/OLE)</div><div class="val">${f(at(Ti,1))}</div><div class="u">g</div>
+    <div class="lbl">Horiz. accel. at T<sub>c</sub> (OBE/OLE)</div><div class="val">${f(at(Tc,1))}</div><div class="u">g</div>`;
+  // refresh the "final accel" lines inside spAdjust without disturbing its input fields
+  const fa1=$("spFinalTi"), fa2=$("spFinalTc");
+  if(fa1) fa1.textContent=f(at(Ti,1)*S.seisAdjImp);
+  if(fa2) fa2.textContent=f(at(Tc,1)*S.seisAdjConv);
+}
+
+/* ===================== FOCUS-PRESERVING RECOMPUTE =====================
+   Many panels are rebuilt via innerHTML on every recompute, which would destroy
+   the <input> the user is typing in (cursor jumps out, requiring re-clicks).
+   compute() captures the focused field + caret, runs the real recompute
+   (computeCore), then restores focus to the matching field afterwards. */
+function _captureFocus(){
+  const el=document.activeElement;
+  if(!el || (el.tagName!=="INPUT" && el.tagName!=="SELECT" && el.tagName!=="TEXTAREA")) return null;
+  // Build a selector that uniquely re-identifies this control after re-render.
+  const esc=s=>String(s).replace(/["\\\]]/g,"\\$&");   // escape for attribute selector
+  let sel=null;
+  if(el.id){ sel="#"+esc(el.id); }
+  else {
+    const attrs=["data-sr","data-sc","data-si","data-k","data-spdel","name"]
+      .filter(a=>el.hasAttribute(a))
+      .map(a=>`[${a}="${esc(el.getAttribute(a))}"]`);
+    if(attrs.length) sel=el.tagName.toLowerCase()+attrs.join("");
+  }
+  if(!sel) return null;
+  let pos=null, end=null;
+  try{ pos=el.selectionStart; end=el.selectionEnd; }catch(_){ }   // not all input types expose selection
+  return {sel, pos, end, raw:el.value, tag:el.tagName};
+}
+function _restoreFocus(f){
+  if(!f) return;
+  const el=document.querySelector(f.sel);
+  if(!el){ return; }
+  // If the panel was rebuilt, the input may show the normalized state value (e.g. "1" for a
+  // half-typed "1."). Put the raw in-progress text back so typing is uninterrupted.
+  if(f.tag==="INPUT" && el.value!==f.raw && f.raw!=null){
+    try{ el.value=f.raw; }catch(_){ }
+  }
+  try{ el.focus(); }catch(_){ }
+  // Restore the caret position so typing continues from where the user was (not the start,
+  // which previously made digits enter right-to-left, e.g. "196" -> "691"). All editable
+  // numeric fields use type="text" inputmode="decimal", so selection APIs work natively.
+  if(el.tagName==="INPUT"){
+    try{
+      const len=String(el.value==null?"":el.value).length;
+      const start = (f.pos!=null) ? Math.min(f.pos,len) : len;
+      const end   = (f.end!=null) ? Math.min(f.end,len) : start;
+      el.setSelectionRange(start,end);
+    }catch(_){ }
+  }
+}
+function compute(){
+  const f=_captureFocus();
+  computeCore();
+  _restoreFocus(f);
+}
+
+/* ===================== CORE COMPUTE ===================== */
+function computeCore(){
+  const D=S.D/1000;                       // m
+  const G=S.SG;
+  const Pd_m = S.Pint/9.81;               // mmWC -> approx head; sheet uses C9*10^-3 added as metres directly
+  // The workbook adds C9*10^-3 (i.e. internal pressure value in mm -> m) directly to head term.
+  const Pint_m = S.Pint/1000;             // m  (C9*10^-3)
+  const Ptest_m = S.Ptest/1000;           // m  (C10*10^-3)
+
+  // ---- shell courses ----
+  let Hd = S.Hd/1000;   // top course design liquid level starts at full Hd then decrements by course length
+  let Ht = S.Hd/1000;   // hydrotest head (workbook uses same starting value, C18*10^-3 = shell height; here Hd cell)
+  // NOTE: workbook E3 = C18*10^-3 (shell height) and F3 = C18*10^-3 as well.
+  Hd = S.shellH/1000; Ht = S.shellH/1000;
+
+  let totWt=0, totCwt=0, totLen=0;
+  const rows = S.courses.map((c)=>{
+    const mat=MATMAP[c.moc]||{Sd:null,St:null};
+    const Sd=mat.Sd, St=mat.St;
+    const len=c.len||0, ca=c.ca||0;
+    const hd=Hd, ht=Ht;
+    let td=null,tt=null,tdca=null,req=null;
+    if(Sd){
+      td = (4.9*D*(hd + Pint_m - 0.3)*G)/Sd;
+      tdca = td + ca;
+    }
+    if(St){
+      // Workbook L-column: tt = 4.9·D·(Ht − 0.3 + Ptest_m) / St  (hydrotest allowable St, the H-column)
+      tt = (4.9*D*(ht - 0.3 + Ptest_m))/St;
+    }
+    const kSel = len>0 ? (tdca!=null?tdca:0) : 0;   // td selected (K) zero if course len 0
+    const mSel = len>0 ? (tt!=null?tt:0) : 0;        // tt selected (M)
+    if(kSel===0 && mSel===0){ req=0; }
+    else { req = Math.max(kSel, mSel, S.tmin); }
+    // weights
+    const adopt=c.adopt||0;
+    const wt = PI*D*adopt*len*S.density/1000;            // kg
+    let cwt = PI*D*len*(adopt-ca)*S.density/1000;
+    if(cwt<=0) cwt=0;
+    totWt+=wt; totCwt+=cwt; totLen+=len;
+    // decrement heads for next (lower) course
+    Hd -= len; Ht -= len;
+    return {c,Sd,St,td,tdca,tt,req,adopt,wt,cwt,kSel,mSel,len,ca};
+  });
+
+  // ---- render shell rows ----
+  const body=$("shellBody").querySelectorAll("tr");
+  rows.forEach((r,i)=>{
+    const tds=body[i].querySelectorAll("td");
+    // indices: 0=# 1=mat 2=CA 3=len 4=hd 5=sd 6=st 7=td 8=tdca 9=tt 10=req 11=adopt 12=wt 13=cwt
+    tds[4].textContent=fmt(S.shellH/1000-(rows.slice(0,i).reduce((a,x)=>a+x.len,0)),1);
+    tds[5].textContent=r.Sd?fmt(r.Sd):"—";
+    tds[6].textContent=r.St?fmt(r.St):"—";
+    tds[7].textContent=r.td!=null?fmt(r.td,3):"—";
+    tds[8].textContent=r.tdca!=null?fmt(r.tdca,3):"—";
+    tds[9].textContent=r.tt!=null?fmt(r.tt,3):"—";
+    const govByTest = r.mSel>r.kSel && r.req>0;
+    tds[10].textContent=r.req>0?fmt(r.req,2):"0";
+    tds[10].className = r.req>0 ? "gov":"";
+    tds[12].textContent=fmt(r.wt,0);
+    tds[13].textContent=fmt(r.cwt,0);
+    // adopted < required warning
+    const adoptInput=tds[11].querySelector("input");
+    if(r.req>0 && r.adopt < r.req-1e-6){ adoptInput.style.borderColor="var(--danger)"; adoptInput.style.color="var(--danger)"; }
+    else { adoptInput.style.borderColor=""; adoptInput.style.color="var(--blue)"; }
+  });
+  // foot
+  $("shellFoot").innerHTML=`<tr>
+    <td colspan="3" class="lcol">TOTAL</td>
+    <td>${fmt(totLen,1)}</td>
+    <td colspan="8"></td>
+    <td>${fmt(totWt,0)}</td>
+    <td>${fmt(totCwt,0)}</td></tr>`;
+
+  /* ===================== CAPACITY (1A) ===================== */
+  // Without seismic freeboard (#REF in workbook), modified dims = nominal.
+  const modD=S.D, modH=S.shellH, modLvl=S.normalLvl;
+  const netCap = PI*Math.pow(modD,2)*(modLvl - S.LLL)*1e-9/4;
+  const storedCap = PI*Math.pow(modD,2)*modLvl*1e-9/4;
+  const heightOK = S.normalLvl < S.shellH;
+  $("capacity").innerHTML=`
+    <div class="lbl">LLL / min operating level</div><div class="val">${fmt(S.LLL,0)}</div><div class="u">mm</div>
+    <div class="lbl">Modified tank diameter</div><div class="val">${fmt(modD,0)}</div><div class="u">mm</div>
+    <div class="lbl">Modified tank height</div><div class="val">${fmt(modH,0)}</div><div class="u">mm</div>
+    <div class="lbl">Modified max operating level</div><div class="val">${fmt(modLvl,0)}</div><div class="u">mm</div>
+    <div class="lbl">Net working capacity</div><div class="val" style="color:var(--accent-2)">${fmt(netCap,1)}</div><div class="u">m³</div>
+    <div class="lbl">Stored capacity</div><div class="val" style="color:var(--blue)">${fmt(storedCap,1)}</div><div class="u">m³</div>
+    <div class="note">Modified dimensions equal nominal; seismic freeboard is reported on the Seismic Design tab (0.42·D·A<sub>c</sub>) and can be deducted manually if a freeboard-governed level is required.</div>
+    <div class="lbl">Tank height check</div>
+    <div class="val" style="grid-column:2/-1;text-align:left;">
+      <span class="check ${heightOK?'ok':'bad'}">${heightOK?'✓ TANK HEIGHT IS OK':'✗ TANK HEIGHT IS NOT OK'}</span></div>`;
+
+  /* ===================== INSULATION DETAIL (1.4) ===================== */
+  // Surface areas from nominal geometry (mm -> m). Shell = cylinder lateral area at mean insulation radius.
+  const Dm = S.D*1e-3, Hm = S.shellH*1e-3;
+  const sIns = S.shellInsThk*1e-3, rIns = S.roofInsThk*1e-3;
+  const shellInsArea = PI*(Dm + sIns)*Hm;                       // mean-radius lateral area, m²
+  const shellInsVol  = shellInsArea*sIns;                       // m³
+  const shellInsWt   = shellInsVol*S.shellInsDens;              // kg
+  // Roof projected area (flat plan) for insulation take-off.
+  const roofInsArea  = PI*Math.pow(Dm,2)/4;                     // m²
+  const roofInsVol   = roofInsArea*rIns;                        // m³
+  const roofInsWt    = roofInsVol*S.roofInsDens;                // kg
+  const totalInsWt   = shellInsWt + roofInsWt;
+  $("insulation").innerHTML=`
+    <div class="lbl">Shell insulation thickness</div><div class="val">${fmt(S.shellInsThk,0)}</div><div class="u">mm</div>
+    <div class="lbl">Shell insulation density</div><div class="val">${fmt(S.shellInsDens,0)}</div><div class="u">kg/m³</div>
+    <div class="lbl">Shell insulation weight</div><div class="val" style="color:var(--accent-2)">${fmt(shellInsWt,0)}</div><div class="u">kg</div>
+    <div class="lbl">Roof insulation thickness</div><div class="val">${fmt(S.roofInsThk,0)}</div><div class="u">mm</div>
+    <div class="lbl">Roof insulation density</div><div class="val">${fmt(S.roofInsDens,0)}</div><div class="u">kg/m³</div>
+    <div class="lbl">Roof insulation weight</div><div class="val" style="color:var(--accent-2)">${fmt(roofInsWt,0)}</div><div class="u">kg</div>
+    <div class="lbl">Total insulation weight</div><div class="val" style="color:var(--blue)">${fmt(totalInsWt,0)}</div><div class="u">kg</div>
+    <div class="note">Operating pressure: ${fmt(S.Pop,0)} mmWC. Shell insulation volume uses mean-radius lateral area; roof uses flat plan area.</div>`;
+
+  /* ===================== ANNULAR PLATE (per workbook) ===================== */
+  const c1 = rows[0];                       // first (bottom-most stress) course = course #1 in sheet (top)
+  // Workbook uses I3 (td of row3) & O3,C3 of first listed course for stress in first shell course.
+  const r1 = rows[0];
+  const annMat = MATMAP[S.annMatl]||{};
+  const annY = annMat.Y, annSd=annMat.Sd, annSt=annMat.St;
+  // Stress design = (td/(adopt-CA))*Sd ; hydrotest = (tt/adopt)*St   (M30,M31)
+  const stressDesign = (r1.td!=null && (r1.adopt-r1.ca)>0)? (r1.td/(r1.adopt-r1.ca))*annSd : null;
+  const stressTest   = (r1.tt!=null && r1.adopt>0)? (r1.tt/r1.adopt)*annSt : null;
+  const annReqMin = 6.35;                    // table 5.1a minimum (workbook M34 fixed)
+  const annProvided=S.annProvided;
+  // radial width (M36): max( 2*tp*sqrt(Y/(2*9.81e-3*Hd_mm*1e-3*min(G,1))) , 600 )
+  const HdmmTerm = S.Hd*1e-3;                // C19*10^-3
+  const wRadial = Math.max( 2*annProvided*Math.sqrt( annY/(2*9.81e-3*HdmmTerm*Math.min(G,1)) ), 600);
+  const wMax = 0.035*S.D;                    // M37
+  const adopt1 = r1.adopt;
+  const reqWidth = Math.min( wRadial + S.bottomToAnnularLap + 2*adopt1 + S.minProjection, wMax); // M41
+  const annOpts = MATERIALS.map(m=>`<option value="${m[0]}"${m[0]===S.annMatl?' selected':''}>${m[0]}</option>`).join("");
+  $("annular").innerHTML=`
+    <div class="lbl">MOC of annular plate</div>
+      <div class="val" style="grid-column:2/-1;text-align:left;"><select id="annMatSel" style="width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:6px 7px;font-family:'Spline Sans Mono';font-size:11.5px;font-weight:600;">${annOpts}</select></div>
+    <div class="lbl">Yield stress (auto)</div><div class="val">${annY!=null?fmt(annY,0):'—'}</div><div class="u">MPa</div>
+    <div class="lbl">Allowable S<sub>d</sub> (auto)</div><div class="val">${annSd!=null?fmt(annSd):'—'}</div><div class="u">MPa</div>
+    <div class="lbl">Allowable S<sub>t</sub> (auto)</div><div class="val">${annSt!=null?fmt(annSt):'—'}</div><div class="u">MPa</div>
+    <div class="note">S<sub>d</sub>, S<sub>t</sub> and yield update automatically from the selected material (API-650 Table 5.2a).</div>
+    <div class="lbl">Stress, 1st course (design)</div><div class="val">${stressDesign!=null?fmt(stressDesign):'—'}</div><div class="u">MPa</div>
+    <div class="lbl">Stress, 1st course (hydrotest)</div><div class="val">${stressTest!=null?fmt(stressTest):'—'}</div><div class="u">MPa</div>
+    <div class="lbl">Min. thk. required (Tbl 5.1a)</div><div class="val">${fmt(annReqMin,2)}</div><div class="u">mm</div>
+    <div class="lbl">Provided annular thickness</div>
+      <div class="val"><input id="annProv" type="text" inputmode="decimal" step="any" value="${annProvided}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+    <div class="lbl">Corrosion allowance (annular)</div>
+      <div class="val"><input id="annCA" type="text" inputmode="decimal" step="any" value="${S.annCA}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+    <div class="lbl">Net (corroded) annular thickness</div><div class="val" style="color:var(--blue)">${fmt(annProvided-S.annCA,2)}</div><div class="u">mm</div>
+    <div class="lbl">Radial width (shell→lap, calc)</div><div class="val">${fmt(wRadial,1)}</div><div class="u">mm</div>
+    <div class="lbl">Max radial width (0.035·D)</div><div class="val">${fmt(wMax,1)}</div><div class="u">mm</div>
+    <div class="lbl">User radial width</div>
+      <div class="val"><input id="annUser" type="text" inputmode="decimal" step="any" value="${S.annUserWidth}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+    <div class="lbl">Required width (Cl. 5.5.2)</div><div class="val" style="color:var(--accent)">${fmt(reqWidth,1)}</div><div class="u">mm</div>
+    <div class="note">Provided width ${S.annUserWidth} mm ${S.annUserWidth>=reqWidth?'✓ adequate':'✗ less than required'} vs required ${fmt(reqWidth,0)} mm.</div>`;
+  $("annMatSel").addEventListener("change",e=>{S.annMatl=e.target.value;compute();});
+  $("annProv").addEventListener("input",e=>{S.annProvided=parseFloat(e.target.value);compute();});
+  $("annCA").addEventListener("input",e=>{S.annCA=parseFloat(e.target.value);compute();});
+  $("annUser").addEventListener("input",e=>{S.annUserWidth=parseFloat(e.target.value);compute();});
+
+  /* ===================== BOTTOM PLATE & PLATE WEIGHTS ===================== */
+  // outer dia at annular = D + 2*O3 + 2*minProjection
+  const Douter = S.D + 2*adopt1 + 2*S.minProjection;
+  const Dinner = Douter - 2*S.annUserWidth;
+  const wAnnular = ( PI*(Math.pow(Douter,2)-Math.pow(Dinner,2))*S.density*1e-9 ) * annProvided/4 * 1.10;
+  const wBottom  = ( PI*Math.pow(Dinner,2)*S.density*1e-9*S.bottomThk )/4 * 1.10;
+  $("bottom").innerHTML=`
+    <div class="lbl">Bottom plate thickness</div>
+      <div class="val"><input id="botThk" type="text" inputmode="decimal" step="any" value="${S.bottomThk}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;"></div><div class="u">mm</div>
+    <div class="lbl">Bottom-to-annular lap</div>
+      <div class="val"><input id="lap" type="text" inputmode="decimal" step="any" value="${S.bottomToAnnularLap}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+    <div class="lbl">Min. projection outside shell</div>
+      <div class="val"><input id="proj" type="text" inputmode="decimal" step="any" value="${S.minProjection}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+    <div class="note">Annular ring O.D. ${fmt(Douter,0)} mm · I.D. ${fmt(Dinner,0)} mm</div>
+    <div class="lbl">Weight of annular plate (Increase by 10%)</div><div class="val" style="color:var(--accent-2)">${fmt(wAnnular,0)}</div><div class="u">kg</div>
+    <div class="lbl">Weight of bottom plate (Increase by 10%)</div><div class="val" style="color:var(--accent-2)">${fmt(wBottom,0)}</div><div class="u">kg</div>
+    <div class="lbl">Bottom + annular total</div><div class="val" style="color:var(--accent)">${fmt(wAnnular+wBottom,0)}</div><div class="u">kg</div>`;
+  $("botThk").addEventListener("input",e=>{S.bottomThk=parseFloat(e.target.value);compute();});
+  $("lap").addEventListener("input",e=>{S.bottomToAnnularLap=parseFloat(e.target.value);compute();});
+  $("proj").addEventListener("input",e=>{S.minProjection=parseFloat(e.target.value);compute();});
+
+  /* ===================== ROOF PLATE (per workbook 2_Thickness D81:L88) ===================== */
+  // tan(theta)=rise/run ; sin(theta)=rise/sqrt(rise^2+run^2)
+  // Slope-length factor = sqrt(1+(rise/run)^2)
+  // Roof radius term uses (D/2 + 2*adopt1) in mm  (adopt1 = O3 = 1st course adopted thk)
+  const rise=S.roofSlopeRise, run=S.roofSlopeRun;
+  const tanTh = rise/run;
+  const sinTh = rise/Math.sqrt(rise*rise+run*run);
+  const slopeFactor = Math.sqrt(1 + tanTh*tanTh);
+  const roofR_m = (S.D*1e-3/2) + 2*adopt1*1e-3;          // metres
+  const roofArea = PI*Math.pow(roofR_m,2);                // plan area, m²
+  const wRoof  = roofArea * S.roofThk * S.density*1e-3 * slopeFactor * 1.1;            // kg
+  const wRoofC = roofArea * (S.roofThk-S.roofCA) * S.density*1e-3 * slopeFactor * 1.1; // kg
+  $("roof").innerHTML=`
+    <div class="lbl">Slope of cone roof (rise : run)</div>
+      <div class="val" style="grid-column:2/-1;text-align:left;display:flex;align-items:center;gap:6px;">
+        <input id="roofRise" type="text" inputmode="decimal" step="any" value="${rise}" style="width:54px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;">
+        <span style="color:var(--muted);">:</span>
+        <input id="roofRun" type="text" inputmode="decimal" step="any" value="${run}" style="width:54px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div>
+    <div class="lbl">tan (θ)</div><div class="val">${fmt(tanTh,4)}</div><div class="u"></div>
+    <div class="lbl">sin (θ)</div><div class="val">${fmt(sinTh,4)}</div><div class="u"></div>
+    <div class="lbl">Corrosion allowance for roof</div>
+      <div class="val"><input id="roofCA" type="text" inputmode="decimal" step="any" value="${S.roofCA}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+    <div class="lbl">Roof plate thickness</div>
+      <div class="val"><input id="roofThk" type="text" inputmode="decimal" step="any" value="${S.roofThk}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+    <div class="note">Roof radius term D/2 + 2·t<sub>adopt,1</sub> = ${fmt(roofR_m*1000,0)} mm · slope-length factor ${fmt(slopeFactor,4)}</div>
+    <div class="lbl">Weight of roof plate (+10% overlap)</div><div class="val" style="color:var(--accent-2)">${fmt(wRoof,0)}</div><div class="u">kg</div>
+    <div class="lbl">Corroded weight of roof plate (+10% overlap)</div><div class="val" style="color:var(--blue)">${fmt(wRoofC,0)}</div><div class="u">kg</div>`;
+  $("roofRise").addEventListener("input",e=>{S.roofSlopeRise=parseFloat(e.target.value);compute();});
+  $("roofRun").addEventListener("input",e=>{S.roofSlopeRun=parseFloat(e.target.value);compute();});
+  $("roofCA").addEventListener("input",e=>{S.roofCA=parseFloat(e.target.value);compute();});
+  $("roofThk").addEventListener("input",e=>{S.roofThk=parseFloat(e.target.value);compute();});
+
+  /* ===================== EXTERNAL PRESSURE (sheet 3) ===================== */
+  // Inputs: wind velocity & factors (this sheet), vacuum pressure & diameter & tmin (general info)
+  const extTmin = S.tmin;                                   // J16 = min thickness (general info C23)
+  const extCorrTmin = S.extMinCorrThk;                      // J17 = min corroded thickness
+  const Dext = S.D/1000;                                    // J2 diameter in m
+  const Vdesign = S.windVel*S.K1*S.K2*S.K3*S.K4*S.contFactor;   // J14
+  const Pz = 0.6*Math.pow(Vdesign,2);                       // J15  wind pressure Pz, N/m²
+  const Pd = Math.max(Pz*S.Ka*S.Kc*S.contFactor, 0.7*Pz);   // J16  design wind pressure Pd, N/m²
+  const Pwind = Pd;                                          // governing wind pressure feeds total ext. pressure
+  const Pvac = S.Pext*9.81;                                 // J17  vacuum pressure N/m² (C12*9.81)
+  const PextTotal = (Pwind + Math.max(Pvac*0.001, 0.24))*0.001;        // J18 kPa
+  const PextDesign = Math.max(PextTotal, 1.72);             // J19 kPa
+  // transposed width per course: W*(tmin_corr/t_corr)^2.5 ; t_corr = adopt - CA
+  const extRows = rows.map((r,i)=>{
+    const tCorr = (r.adopt||0)-(r.ca||0);
+    const w = r.len||0;
+    const Wtr = tCorr>0 ? Math.pow(extCorrTmin/tCorr,2.5)*w : 0;
+    return {n:i+1, w, tCorr, Wtr};
+  });
+  const extTransposed = extRows.reduce((a,x)=>a+x.Wtr,0);   // J18 = E45
+  // J19 max unstiffened height (Cl 5.9.6.1)
+  const H1 = 9.47*extCorrTmin*Math.pow(extCorrTmin/Dext,1.5)*(1.72/PextDesign);
+  const nStiff = Math.max(0, Math.ceil((extTransposed/H1)-1));   // J20 ROUNDUP(...-1,0)
+  const stiffSpacing = extTransposed/(nStiff+1);               // J21 (calculated spacing)
+  const stiffSpacingUser = (S.stiffSpacingUser!=null && !isNaN(S.stiffSpacingUser))
+                             ? S.stiffSpacingUser : stiffSpacing;   // J22 (USER INPUT) - drives walk & checks
+  $("extpres").innerHTML=`
+    <div class="lbl">Diameter of tank</div><div class="val">${fmt(Dext,1)}</div><div class="u">m</div>
+    <div class="lbl">Wind velocity</div><div class="val">${fmt(S.windVel,0)}</div><div class="u">m/s</div>
+    <div class="lbl">Design wind velocity</div><div class="val">${fmt(Vdesign,3)}</div><div class="u">m/s</div>
+    <div class="lbl">Wind pressure (P<sub>z</sub>)</div><div class="val">${fmt(Pz,1)}</div><div class="u">N/m²</div>
+    <div class="lbl">Design wind pressure (P<sub>d</sub>)</div><div class="val" style="color:var(--blue)">${fmt(Pd,1)}</div><div class="u">N/m²</div>
+    <div class="lbl">External / vacuum pressure</div><div class="val">${fmt(Pvac,1)}</div><div class="u">N/m²</div>
+    <div class="lbl">Total external pressure</div><div class="val">${fmt(PextTotal,4)}</div><div class="u">kPa</div>
+    <div class="lbl">Design external pressure</div><div class="val" style="color:var(--accent)">${fmt(PextDesign,3)}</div><div class="u">kPa</div>
+    <div class="note">P<sub>ext,design</sub> is governed by max(computed, 1.72 kPa per API-650).</div>
+    <div class="lbl">Min. thickness</div><div class="val">${fmt(extTmin,1)}</div><div class="u">mm</div>
+    <div class="lbl">Min. corroded thickness</div><div class="val">${fmt(extCorrTmin,1)}</div><div class="u">mm</div>
+    <div class="lbl">Total transposed width (corroded)</div><div class="val">${fmt(extTransposed,3)}</div><div class="u">m</div>
+    <div class="lbl">Max unstiffened height (§5.9.6.1)</div><div class="val">${fmt(H1,3)}</div><div class="u">m</div>
+    <div class="lbl">Number of intermediate stiffeners</div><div class="val" style="color:var(--accent-2)">${nStiff}</div><div class="u"></div>
+    <div class="lbl" id="actStiffLbl">Actual no. of stiffeners (per user locations)</div><div class="val" id="actStiffVal"></div><div class="u" id="actStiffUnit"></div>
+    <div class="lbl">Spacing of stiffeners (calculated)</div><div class="val">${fmt(stiffSpacing,3)}</div><div class="u">m</div>
+    <div class="lbl" style="color:var(--blue)">USER INPUT for spacing of stiffeners</div><div class="val"><input id="stiffSpacingUserIn" type="text" inputmode="decimal" step="any" value="${stiffSpacingUser}" style="width:80px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';font-size:13px;text-align:right;font-weight:700;"></div><div class="u">m</div>`;
+  const ssIn=$("stiffSpacingUserIn");
+  if(ssIn){ ssIn.addEventListener("change",e=>{ S.stiffSpacingUser=parseFloat(e.target.value); compute(); }); }
+
+  /* ===================== INTERMEDIATE WIND-GIRDER SIZING (rows 50-88) ===================== */
+  // Backend-only: transposed-width walk converts each stiffener's transposed location
+  // (k*spacing from top) back to a physical "location from top" in metres (matches workbook E-col).
+  const Hshell_m = S.shellH/1000;                 // C45*10^-3 inner-tank height
+  const cumActualTop = []; // running actual width from top up to course i (inclusive)
+  function autoLocFromTop(k){                     // returns metres from top
+    const target = k*stiffSpacingUser;
+    let cumTr=0, fromTop=0;
+    for(let i=0;i<extRows.length;i++){
+      const er=extRows[i];
+      if(cumTr+er.Wtr >= target){
+        const ratio = er.Wtr>0 ? (target-cumTr)/er.Wtr : 0;
+        fromTop += ratio*er.w; return fromTop;
+      }
+      cumTr+=er.Wtr; fromTop+=er.w;
+    }
+    return fromTop;
+  }
+  // Auto location of stiffener FROM BOTTOM (mm), reproducing the workbook D-column (=row69 sum *10^3).
+  // Excel walks courses top->down accumulating transposed width (col F); per course the contribution
+  // to the location-sum is the actual course width, with a partial conversion at the girder boundary.
+  // NOTE: stiffener #1 uses spacing in metres*10^-3 in its boundary term (workbook H50 quirk), which
+  // snaps it to the nearest full course; stiffeners #2+ use k*spacing directly.
+  function autoLocFromBottom(k){                  // returns mm from bottom (matches workbook D col)
+    let F=0, sum=0;
+    for(let i=0;i<extRows.length;i++){
+      const Ei=extRows[i].Wtr, Di=extRows[i].tCorr;
+      F+=Ei;
+      const ok = F < k*stiffSpacingUser;
+      const Hcol = ok ? Ei : (k===1 ? F - stiffSpacingUser*1e-3 : F - k*stiffSpacingUser);
+      const Icol = Ei - Hcol;
+      let Jcol;
+      if(Icol<0) Jcol=0;
+      else if(Icol===0) Jcol = Di>0 ? Math.pow(Di/extCorrTmin,2.5)*Ei : 0;
+      else Jcol = Di>0 ? Math.pow(Di/extCorrTmin,2.5)*Icol : 0;
+      sum+=Jcol;
+    }
+    return Math.min(sum, Hshell_m)*1000;          // capped at inner-tank height (unused slots -> full height)
+  }
+  // Yield-allowable term for Zreq: min('2_Thickness' AO3 ~ allowable, 210). Use first-course Sd-derived.
+  const FyAllow = 210;                            // workbook MIN(AO3,210) resolves to 210 here
+  const shellHmm = S.shellH;                      // C45*10^3 full shell height (mm)
+  const locTol = 1e-6*shellHmm + 1;               // tolerance for "lands at full height" (workbook D=C45 -> NR)
+  // Build per-stiffener results. A slot is a genuine stiffener when its auto location-from-bottom
+  // (workbook D-col, driven by the USER spacing J22) lands strictly below the full shell height (C45).
+  const stiffResults = S.stiffeners.map((st,idx)=>{
+    const autoBottom = autoLocFromBottom(idx+1);                 // mm from bottom (workbook D col)
+    const required = autoBottom < (shellHmm - locTol);           // workbook col C: D<>C45  -> counted
+    const autoTop = required ? autoLocFromTop(idx+1)*1000 : 0;   // mm from top (suggested)
+    const locTop = (st.loc!=null && !isNaN(st.loc)) ? st.loc : (required?Math.round(autoTop):0);
+    const F = required ? (S.shellH - locTop) : 0;               // dist from bottom (mm) used in Zreq
+    const Zreq = required ? ((6*F*1e-3*Math.pow(Dext,2)/(0.5*Math.min(FyAllow,210)))*(PextDesign/1.72))*1e3 : 0;
+    // built-up section
+    const H=st.shellT, J=st.webT, K=st.webL, L=st.flT, M=st.flH;
+    const effW = 16*H*2 + J;
+    const x1=H/2, a1=H*effW, I1=effW*Math.pow(H,3)/12;
+    const x2=H+K/2, a2=J*K, I2=J*Math.pow(K,3)/12;
+    const x3=H+K+L/2, a3=L*M, I3=M*Math.pow(L,3)/12;
+    const aT=a1+a2+a3;
+    const X = aT>0 ? (x1*a1+x2*a2+x3*a3)/aT : 0;
+    const Ifin = (I1+I2+I3) + (a1*x1*x1+a2*x2*x2+a3*x3*x3) - aT*X*X;
+    const Zprov = required && X>0 ? Ifin/X : 0;
+    const wWeb = Math.PI*Dext*K*J*1e-6*S.density;
+    const wFl  = Math.PI*(Dext+K*1e-3)*L*M*1e-6*S.density;
+    const wt = required ? (wWeb+wFl) : 0;
+    return {idx, required, autoTop, autoBottom, locTop, F, Zreq, Zprov, wt, ok: !required || Zprov>=Zreq};
+  });
+  // Actual number of stiffeners = count of genuine girders (auto location below full shell height).
+  const actStiffCount = stiffResults.filter(r=>r.required).length;
+  const actStiffEl=$("actStiffVal"), actLblEl=$("actStiffLbl");
+  if(actStiffEl){
+    actStiffEl.textContent=actStiffCount;
+    actStiffEl.style.cssText="color:var(--blue);font-weight:800;background:rgba(88,166,255,.16);border:1px solid var(--blue);border-radius:6px;padding:1px 10px;";
+    if(actLblEl) actLblEl.style.color="var(--blue)";
+  }
+  const stiffBody=$("stiffBody"); stiffBody.innerHTML="";
+  let totStiffWt=0;
+  stiffResults.forEach((r,i)=>{
+    if(!r.required) return;
+    totStiffWt += r.wt;
+    const st=S.stiffeners[i];
+    const tr=document.createElement("tr");
+    const numIn=(key,val)=>`<input type="text" inputmode="decimal" step="any" data-si="${i}" data-k="${key}" value="${val}" style="width:70px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:5px 7px;font-family:'Spline Sans Mono';font-size:13px;text-align:right;font-weight:600;">`;
+    tr.innerHTML=`<td>${i+1}</td>
+      <td style="color:var(--accent-2)">${fmt(r.autoBottom,2)}</td>
+      <td>${numIn('loc', st.loc!=null&&!isNaN(st.loc)?st.loc:Math.round(r.autoTop))}</td>
+      <td>${fmt(r.F,0)}</td>
+      <td>${numIn('shellT',st.shellT)}</td>
+      <td>${numIn('webT',st.webT)}</td>
+      <td>${numIn('webL',st.webL)}</td>
+      <td>${numIn('flT',st.flT)}</td>
+      <td>${numIn('flH',st.flH)}</td>
+      <td>${fmt(r.Zreq,0)}</td>
+      <td style="color:var(--accent)">${fmt(r.Zprov,0)}</td>
+      <td>${fmt(r.wt,0)}</td>
+      <td><span class="check ${r.ok?'ok':'bad'}" style="padding:3px 9px;">${r.ok?'OK':'NOT OK'}</span></td>`;
+    stiffBody.appendChild(tr);
+  });
+  if(actStiffCount===0){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td colspan="13" class="lcol" style="text-align:left;color:var(--muted);">No intermediate wind girders required (shell is self-stiffening for the design external pressure).</td>`;
+    stiffBody.appendChild(tr);
+  }
+  stiffBody.querySelectorAll("input").forEach(inp=>{
+    inp.addEventListener("input",e=>{
+      const si=+e.target.dataset.si, k=e.target.dataset.k;
+      S.stiffeners[si][k]=parseFloat(e.target.value);
+      compute();
+    });
+  });
+  const maxZprov = Math.max(0,...stiffResults.filter(r=>r.required).map(r=>r.Zprov));
+  $("stiffFoot").innerHTML = actStiffCount>0 ? `<tr>
+    <td colspan="10" class="lcol">ACTUAL no. of stiffeners (per user locations): <b style="color:var(--blue)">${actStiffCount}</b> &nbsp;·&nbsp; max Z<sub>prov</sub> ${fmt(maxZprov,0)} mm³</td>
+    <td></td><td>${fmt(totStiffWt,0)}</td><td></td></tr>` : "";
+
+  /* ===================== TOP STIFFENER (rows 198-211) ===================== */
+  const ts=S.topStiff;
+  const Q = extTransposed*1e6*Hshell_m/4;          // E199 = J18*10^6*J3/4
+  const tH=ts.shellT, tJ=ts.webT, tK=ts.webL, tL=ts.flT, tM=ts.flH;
+  const tEffW = 1.56*Math.sqrt(Dext*0.5*1e3*tH) + tJ;   // D202
+  const tx1=tH/2, ta1=tH*tEffW, tI1=tEffW*Math.pow(tH,3)/12;
+  const tx2=tH+tK/2, ta2=tJ*tK, tI2=tJ*Math.pow(tK,3)/12;
+  const tx3=tH+tK+tL/2, ta3=tL*tM, tI3=tM*Math.pow(tL,3)/12;
+  const taT=ta1+ta2+ta3;
+  const tX = taT>0 ? (tx1*ta1+tx2*ta2+tx3*ta3)/taT : 0;
+  const tIprov = (tI1+tI2+tI3)+(ta1*tx1*tx1+ta2*tx2*tx2+ta3*tx3*tx3)-taT*tX*tX;   // D211
+  const tWeb = Math.PI*Dext*tJ*tK*1e-6*S.density;       // uses J7? workbook uses J7=K2 — keep density per material
+  const tFl  = Math.PI*(Dext+tK*1e-3)*tL*tM*1e-6*S.density;
+  const IzReqOK = ts.IzReq!=null && !isNaN(ts.IzReq);
+  const tOK = IzReqOK ? (tIprov>=ts.IzReq) : null;
+  const tNum=(key,val)=>`<input type="text" inputmode="decimal" step="any" id="ts_${key}" value="${val}" style="width:64px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';font-size:11.5px;text-align:right;font-weight:600;">`;
+  $("topstiff").innerHTML=`
+    <div class="lbl">Q = P<sub>d</sub>·H/4</div><div class="val">${fmt(Q,1)}</div><div class="u">N/m</div>
+    <div class="lbl">Corresponding shell thickness</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('shellT',tH)}</div>
+    <div class="lbl">Web thickness</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('webT',tJ)}</div>
+    <div class="lbl">Web length</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('webL',tK)}</div>
+    <div class="lbl">Flange thickness</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('flT',tL)}</div>
+    <div class="lbl">Flange height</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('flH',tM)}</div>
+    <div class="lbl">Effective shell width</div><div class="val">${fmt(tEffW,1)}</div><div class="u">mm</div>
+    <div class="lbl">I provided</div><div class="val" style="color:var(--accent)">${fmt(tIprov,0)}</div><div class="u">mm⁴</div>
+    <div class="lbl">Top stiffener weight</div><div class="val" style="color:var(--accent-2)">${fmt(tWeb+tFl,1)}</div><div class="u">kg</div>
+    <div class="lbl">I<sub>z,required</sub> (project input)</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('IzReq',IzReqOK?ts.IzReq:'')}</div>
+    <div class="note">${IzReqOK ? `Check: I<sub>provided</sub> ${fmt(tIprov,0)} mm⁴ ${tOK?'≥':'<'} I<sub>z,required</sub> ${fmt(ts.IzReq,0)} mm⁴ → <span class="check ${tOK?'ok':'bad'}" style="padding:2px 8px;">${tOK?'OK':'NOT OK'}</span>` : 'Enter the project I<sub>z,required</sub> to complete the check (workbook reference is broken).'}</div>`;
+  ["shellT","webT","webL","flT","flH","IzReq"].forEach(k=>{
+    const el=$("ts_"+k); if(el) el.addEventListener("input",e=>{
+      const v=e.target.value; S.topStiff[k]= v===''?null:parseFloat(v); compute();
+    });
+  });
+
+  /* ===================== COMPRESSION RING (sheet 4) ===================== */
+  // Inputs already available in scope: annY (annular plate yield = D4),
+  // sinTh (D15 = sin theta), wRoofC (D11 source weight = 2_Thickness!L88),
+  // S.D (mm), S.density, S.Pint (general info C9), adopt1 / rows for shell.
+  // R = D/2 in metres (general info C17*10^-3 / 2). Y = compression-ring MOC yield (D4 = VLOOKUP of D3).
+  const crR = S.D*1e-3;                             // workbook "R" term = diameter in metres (C17*10^-3)
+  const crMat = MATMAP[S.crMOC]||{};                // material DB lookup (= VLOOKUP D3 -> yield)
+  const crY = crMat.Y;                              // D4 (yield strength, auto from selected MOC)
+  const crSin = sinTh;                              // D15 (sin θ, used for participating-roof width)
+  const crTan = tanTh;                              // S82 (tan θ, used in D6 denominator)
+  // D6: Compression Area Required
+  const crAreaReq = (200*Math.pow(crR,2)*(S.Pint*0.00981 - (0.00127*wRoofC*9.81/Math.pow(crR,2)))) / (crY*crTan);
+  // Area availability
+  const crTopT = S.crTopShellThk;                   // D9
+  const crTopCA = S.crTopShellCA;                   // D10
+  const crRoofCA = S.roofCA;                         // D11 (= 2_Thickness!L84 roof CA)
+  const crRoofThk = S.roofThk;                       // L85
+  const crWshell = 0.6*Math.sqrt(0.5*S.D*(crTopT-crTopCA));                       // D12
+  const crAshell = crWshell*(crTopT-crTopCA);                                     // D13
+  const crWroof  = Math.min(0.3*Math.sqrt((S.D*0.5)/crSin*(crRoofThk-crRoofCA)),300); // D16
+  const crAroof  = crWroof*(crRoofThk-crRoofCA);                                  // D17
+  const crAvail  = crAshell + crAroof;                                            // D18
+  const crAddReq = crAreaReq - crAvail;                                           // D19
+  const crLeShell = (250/Math.sqrt(crY))*(crTopT-crTopCA);                        // D20
+  const crLeRoof  = (250/Math.sqrt(crY))*(crRoofThk-crRoofCA);                    // D21
+  const crCurbArea = S.crCurbA*S.crCurbT + (S.crCurbB-S.crCurbT)*S.crCurbT;       // D23
+  const crAvailCurb = crAvail + crCurbArea;                                       // D24
+  const crRingReqd = crAvailCurb > crAreaReq ? "NO" : "YES and Top stiffeners is not required"; // D25
+  const crDetailMsg = ((crLeShell+crLeRoof)*10 > crAddReq)
+        ? "Detail a–Detail g are sufficient of Appendix-F of API-650"
+        : "Provide Compression ring as per Detail h, Detail-i, Detail-j or Detail-k of Appendix-F of API-650"; // B26
+  const crReqMin = crAddReq;                                                      // D27
+  const crTcr = S.crTcr;                                                          // D28
+  const crTs  = S.crTs;                                                           // D31
+  const crDetailH = (250*crTcr/Math.sqrt(crY))*crTcr;                             // D29
+  const crDetailI = -crAroof + ((250*crTcr/Math.sqrt(crY))
+        + Math.min(0.6*Math.sqrt((S.D*0.5/crSin)*crTcr), 0.9*Math.sqrt((S.D*0.5)*crTcr)))*crTcr; // D30
+  const crDetailJ = crDetailI + (0.6*Math.sqrt(0.5*S.D*crTs))*crTs;               // D32
+  const crDetailK = (0.6*Math.sqrt(0.5*S.D*crTs))*crTs + (250*crTcr/Math.sqrt(crY))*crTcr; // D33
+  // D34: ring weight (when a detail ring is required, use additional area; else curb angle)
+  const crRingWeight = (crDetailMsg.indexOf("Provide Compression ring")===0)
+        ? crAddReq*PI*S.D*1e-9*S.density
+        : crCurbArea*PI*S.D*1e-9*S.density;                                       // Kg
+  const crInputStyle = "width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;";
+  const crMocOpts = MATERIALS.map(m=>`<option value="${m[0]}"${m[0]===S.crMOC?' selected':''}>${m[0]}</option>`).join("");
+  $("compReqAvail").innerHTML=`
+    <div class="lbl" style="color:var(--blue)">Roof MOC</div>
+      <div class="val" style="grid-column:2/-1;text-align:left;"><select id="crMocSel" style="width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:6px 7px;font-family:'Spline Sans Mono';font-size:11.5px;font-weight:700;">${crMocOpts}</select></div>
+    <div class="lbl">Yield strength (auto)</div><div class="val">${crY!=null?fmt(crY,0):'—'}</div><div class="u">MPa</div>
+    <div class="lbl">sin (θ) (from roof slope)</div><div class="val">${fmt(crSin,5)}</div><div class="u"></div>
+    <div class="lbl">Compression area required</div><div class="val" style="color:var(--accent)">${fmt(crAreaReq,1)}</div><div class="u">mm²</div>
+    <div class="note">Area availability calculation (corroded):</div>
+    <div class="lbl" style="color:var(--blue)">Thickness of top-most shell course</div>
+      <div class="val"><input id="crTopT" type="text" inputmode="decimal" step="any" value="${crTopT}" style="${crInputStyle}"></div><div class="u">mm</div>
+    <div class="lbl" style="color:var(--blue)">Corrosion allowance of top shell</div>
+      <div class="val"><input id="crTopCA" type="text" inputmode="decimal" step="any" value="${crTopCA}" style="${crInputStyle}"></div><div class="u">mm</div>
+    <div class="lbl">Corrosion allowance (roof)</div><div class="val">${fmt(crRoofCA,1)}</div><div class="u">mm</div>
+    <div class="lbl">Max width participating shell</div><div class="val">${fmt(crWshell,2)}</div><div class="u">mm</div>
+    <div class="lbl">Area of participating shell</div><div class="val">${fmt(crAshell,1)}</div><div class="u">mm²</div>
+    <div class="lbl">Max width participating roof</div><div class="val">${fmt(crWroof,2)}</div><div class="u">mm</div>
+    <div class="lbl">Area of participating roof</div><div class="val">${fmt(crAroof,1)}</div><div class="u">mm²</div>
+    <div class="lbl">Total area available (shell+roof)</div><div class="val" style="color:var(--accent-2)">${fmt(crAvail,1)}</div><div class="u">mm²</div>
+    <div class="lbl">Min. additional area required</div><div class="val" style="color:var(--accent)">${fmt(crAddReq,1)}</div><div class="u">mm²</div>
+    <div class="lbl">L<sub>e</sub> (shell)</div><div class="val">${fmt(crLeShell,2)}</div><div class="u">mm</div>
+    <div class="lbl">L<sub>e</sub> (roof)</div><div class="val">${fmt(crLeRoof,2)}</div><div class="u">mm</div>`;
+  $("compDetail").innerHTML=`
+    <div class="lbl" style="color:var(--blue)">Top curb angle (A × B × t)</div>
+      <div class="val" style="grid-column:2/-1;text-align:left;display:flex;align-items:center;gap:5px;">
+        <input id="crCurbA" type="text" inputmode="decimal" step="any" value="${S.crCurbA}" style="${crInputStyle}">
+        <span style="color:var(--muted)">×</span>
+        <input id="crCurbB" type="text" inputmode="decimal" step="any" value="${S.crCurbB}" style="${crInputStyle}">
+        <span style="color:var(--muted)">×</span>
+        <input id="crCurbT" type="text" inputmode="decimal" step="any" value="${S.crCurbT}" style="${crInputStyle}"></div>
+    <div class="lbl">Area of curb angle</div><div class="val">${fmt(crCurbArea,1)}</div><div class="u">mm²</div>
+    <div class="lbl">Total avail (shell+roof+curb)</div><div class="val">${fmt(crAvailCurb,1)}</div><div class="u">mm²</div>
+    <div class="lbl">Compression ring required?</div>
+      <div class="val" style="grid-column:2/-1;text-align:left;"><span class="check ${crRingReqd==='NO'?'ok':'bad'}">${crRingReqd}</span></div>
+    <div class="note">${crDetailMsg}</div>
+    <div class="lbl">Required min. area for ring</div><div class="val" style="color:var(--accent)">${fmt(crReqMin,1)}</div><div class="u">mm²</div>
+    <div class="lbl" style="color:var(--blue)">Thickness of bar (t<sub>cr</sub>)</div>
+      <div class="val"><input id="crTcr" type="text" inputmode="decimal" step="any" value="${crTcr}" style="${crInputStyle}"></div><div class="u">mm</div>
+    <div class="lbl">Area provided — Detail-h</div><div class="val">${fmt(crDetailH,1)}</div><div class="u">mm²</div>
+    <div class="lbl">Area provided — Detail-i</div><div class="val">${fmt(crDetailI,1)}</div><div class="u">mm²</div>
+    <div class="lbl" style="color:var(--blue)">Thk. of thickened shell plate (t<sub>s</sub>)</div>
+      <div class="val"><input id="crTs" type="text" inputmode="decimal" step="any" value="${crTs}" style="${crInputStyle}"></div><div class="u">mm</div>
+    <div class="lbl">Area provided — Detail-j</div><div class="val">${fmt(crDetailJ,1)}</div><div class="u">mm²</div>
+    <div class="lbl">Area provided — Detail-k</div><div class="val">${fmt(crDetailK,1)}</div><div class="u">mm²</div>`;
+  // detail adequacy flags
+  const detH_ok=crDetailH>=crReqMin, detI_ok=crDetailI>=crReqMin, detJ_ok=crDetailJ>=crReqMin, detK_ok=crDetailK>=crReqMin;
+  // Roof frangibility (D37): DLs/(2*pi*Fy*tanTheta)*9.81, DLs = shell+stiff+roof struct+shell ins+comp ring
+  const crFrangDLs = totWt + totStiffWt + S.crRoofStructWt + shellInsWt + crRingWeight; // kg
+  const crFrangArea = (crY && crTan) ? (crFrangDLs/(2*PI*crY*crTan))*9.81 : 0;          // D37 (D4=Fy, S83=tanθ)
+  const flag=ok=>`<span class="check ${ok?'ok':'bad'}">${ok?'✓ adequate':'✗ insufficient'}</span>`;
+  $("compResult").innerHTML=`
+    <div class="lbl">Min. additional area required</div><div class="val" style="color:var(--accent)">${fmt(crReqMin,1)}</div><div class="u">mm²</div>
+    <div class="lbl">Detail-h vs required</div><div class="val" style="grid-column:2/-1;text-align:left;">${fmt(crDetailH,0)} mm² &nbsp; ${flag(detH_ok)}</div>
+    <div class="lbl">Detail-i vs required</div><div class="val" style="grid-column:2/-1;text-align:left;">${fmt(crDetailI,0)} mm² &nbsp; ${flag(detI_ok)}</div>
+    <div class="lbl">Detail-j vs required</div><div class="val" style="grid-column:2/-1;text-align:left;">${fmt(crDetailJ,0)} mm² &nbsp; ${flag(detJ_ok)}</div>
+    <div class="lbl">Detail-k vs required</div><div class="val" style="grid-column:2/-1;text-align:left;">${fmt(crDetailK,0)} mm² &nbsp; ${flag(detK_ok)}</div>
+    <div class="lbl">Weight of compression ring</div><div class="val" style="color:var(--accent-2)">${fmt(crRingWeight,0)}</div><div class="u">kg</div>
+    <div class="note" style="margin-top:10px;">Roof frangibility / emergency vent (Cl. 5.10.2.6):</div>
+    <div class="lbl">Max area required for frangibility (D<sub>Ls</sub>)</div><div class="val">${fmt(crFrangArea,1)}</div><div class="u">mm²</div>
+    <div class="lbl">Min. additional area required</div><div class="val">${fmt(crAddReq,1)}</div><div class="u">mm²</div>
+    <div class="lbl">Emergency vent</div>
+      <div class="val" style="grid-column:2/-1;text-align:left;"><span class="check ${crFrangArea>crAddReq?'ok':'bad'}">${crFrangArea>crAddReq?'NOT required':'REQUIRED'}</span></div>
+    <div class="note">Also check other requirements of Cl. 5.10.2.6 for emergency-vent need.</div>`;
+  ["crTopT","crTopCA","crCurbA","crCurbB","crCurbT","crTcr","crTs"].forEach(id=>{
+    const el=$(id);
+    if(el) el.addEventListener("input",e=>{
+      const map={crTopT:"crTopShellThk",crTopCA:"crTopShellCA",crCurbA:"crCurbA",crCurbB:"crCurbB",crCurbT:"crCurbT",crTcr:"crTcr",crTs:"crTs"};
+      S[map[id]]=parseFloat(e.target.value); compute();
+    });
+  });
+  const crMocSel=$("crMocSel");
+  if(crMocSel) crMocSel.addEventListener("change",e=>{ S.crMOC=e.target.value; compute(); });
+
+  /* ===================== WIND LOAD & OVERTURNING (sheet 5_Wind load) ===================== */
+  // Cross-sheet refs: J2/J3 = annular plate MOC & its yield (annMatl); J6 = D + 2*shellInsThk (mm);
+  // C9 = Pint (mmWC), C11 = Pop (mmWC), C18 = D (mm), C20 = Hd (mm).
+  // M35/M36 (2_Thickness) = annular provided thk & CA -> annProvided / annCA in this app.
+  const wlYield = (MATMAP[S.annMatl]||{}).Y;             // J3 yield of bottom (annular) plate, MPa
+  const wlCf  = S.wlShapeFactor;                          // J4
+  const wlCpe = S.wlCpe;                                  // J5
+  const wlD   = S.D + 2*S.shellInsThk;                   // J6 diameter incl. insulation (mm)
+  const wlV   = S.wlWindVel;                              // J7
+  const wlH   = S.wlTankHeight;                           // J8 (m)
+  // Design wind velocity & pressure for each band: Vd = V*K1*K2*K3*K4*Cont ; Pz = 0.6*Vd^2
+  function wlBand(k1,k2,k3,k4,cont,ka,kc){
+    const Vd = wlV*k1*k2*k3*k4*cont;
+    const Pz = 0.6*Vd*Vd;
+    return {Vd,Pz,ka,kc,cont};
+  }
+  const b10 = wlBand(S.wlK1_10,S.wlK2_10,S.wlK3_10,S.wlK4_10,S.wlCont_10,S.wlKa_10,S.wlKc_10);
+  const b15 = wlBand(S.wlK1_15,S.wlK2_15,S.wlK3_15,S.wlK4_15,S.wlCont_15,S.wlKa_15,S.wlKc_15);
+  const b20 = wlBand(S.wlK1_20,S.wlK2_20,S.wlK3_20,S.wlK4_20,S.wlCont_20,S.wlKa_20,S.wlKc_20);
+  // Design wind pressure Pd (N/m²): band-10 always; band-15 only if H>10; band-20 only if H>15  (J21/T21/AD21)
+  const Pd10 = Math.max(b10.Pz*b10.ka*b10.kc*b10.cont, 0.7*b10.Pz);
+  const Pd15 = wlH>10 ? Math.max(b15.Pz*b15.ka*b15.kc*b15.cont, 0.7*b15.Pz, 0) : 0;
+  const Pd20 = wlH>15 ? Math.max(b20.Pz*b20.ka*b20.kc*b20.cont, 0.7*b20.Pz, 0) : 0;
+  const PdMax = Math.max(Pd10,Pd15,Pd20);
+  // Shear at bottom (J24): (Cf*D*1e-3*(Pd20*(H-15)+Pd15*5+Pd10*10))/9.81  -> kg
+  const wlShear = (wlCf*wlD*1e-3*(Pd20*(wlH-15)+Pd15*5+Pd10*10))/9.81;
+  // Upward force on roof (J26): (max(Pd)*(pi*D^2*1e-6/4)*Cpe)/9.81  -> kg
+  const wlUplift = (PdMax*(PI*wlD*wlD*1e-6/4)*wlCpe)/9.81;
+  // Mhorizontal (J28): sum of band shears * their lever arms  -> kg.m
+  const wlMh = ((wlCf*wlD*1e-3*((Pd20*(wlH-15))/9.81))*(15+(wlH-15)/2))
+             + (wlCf*wlD*1e-3*((Pd15*5)/9.81)*12.5)
+             + (wlCf*wlD*1e-3*((Pd10*10)/9.81)*5);
+  const wlMv = wlUplift*0.1*wlD*1e-3;                    // J29 Mvertical = uplift*0.1D
+  const wlMtot = wlMh + wlMv;                            // J30
+  const wlMwind = wlMtot*1.04;                           // J31/J33 with 4% margin
+  // ---- stability resisting terms ----
+  // J36/J37 now derive from the weight components (8_Weights):
+  //   J36 = shell + stiffeners + roof structure + shell insulation + compression ring
+  //   J37 = roof plate + roof insulation
+  const wlMDLs = totWt + totStiffWt + S.crRoofStructWt + shellInsWt + crRingWeight; // J36 (kg)
+  const wlMDLr = wRoof + roofInsWt;                                                  // J37 (kg)
+  const wlMDL  = wlMDLs*S.D*1e-3/2;                      // J39  dead-load resisting moment (shell), kg.m
+  const wlMDLR = wlMDLr*S.D*1e-3/2;                      // J40  dead-load resisting moment (roof), kg.m
+  const wlMws  = wlMh;                                   // J42  Mws = Mhorizontal
+  const wlMw   = wlMh + wlMv*0.6/0.1;                    // J43  Mw = Mhorizontal + M0.6D
+  // wL resisting weight of contents per unit length (J45)
+  const annNet = S.annProvided - S.annCA;               // M35 - M36
+  const Hd_m   = S.Hd*1e-3;                              // C20*10^-3
+  const D_m    = S.D*1e-3;                               // C18*10^-3
+  // J45: min(59*(M35-M36)*sqrt(J3*C20*10^-3), 70.4*C20*C18*10^-6) ; C20=Hd & C18=D both in mm
+  const wL = (Math.min( 59*annNet*Math.sqrt(wlYield*Hd_m), 70.4*S.Hd*S.D*1e-6 )*PI*wlD*1e-3)/9.81; // kg/m
+  const wlMF = wL*wlD*0.5*1e-3;                          // J44 moment about shell-to-bottom joint, kg.m
+  // Internal-pressure moments (kg.m). Pi from design internal pressure (C9, mmWC); Pop = max(C11,0.4*C9)
+  const wlMPi  = (PI*Math.pow(D_m,3))*S.Pint/8;          // J46
+  const wlMPop = (PI*Math.pow(D_m,3))*Math.max(S.Pop,0.4*S.Pint)/8; // J47
+  // ---- three stability conditions (all in ton.m) ----
+  const c1L = (0.6*wlMw + wlMPi)*1e-3,        c1R = ((wlMDL/1.5)+wlMDLR)*1e-3;  // (1)
+  const c2L = (wlMw + wlMPop)*1e-3,           c2R = ((wlMDL+wlMF)*0.5 + wlMDLR)*1e-3; // (2)
+  const c3L = (wlMws + wlMPop)*1e-3,          c3R = ((wlMDL/1.5)+wlMDLR)*1e-3;  // (3)
+  const c1OK = c1L<c1R, c2OK = c2L<c2R, c3OK = c3L<c3R;
+  const wlAnchorOK = c1OK && c2OK && c3OK;
+  // ---- annular plate width for wind (Cl. 5.11.2.3.2) ----
+  const wlLb   = 0.0291*annNet*Math.sqrt(wlYield/Hd_m); // J70 (m)
+  const wl035D = 0.035*S.D*1e-3;                         // J71 (m)
+  const wlMinAnn = Math.max(0.45, Math.min(wlLb, wl035D)); // J72 (m)
+
+  const wlInStyle = "width:74px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;";
+  const wlIn=(key,val)=>`<input type="text" inputmode="decimal" step="any" id="wl_${key}" value="${val}" style="${wlInStyle}">`;
+  const wlBandStyle = "width:100%;max-width:90px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;";
+  const wlBandIn=(key)=>`<input type="text" inputmode="decimal" step="any" id="wl_${key}" value="${S[key]}" style="${wlBandStyle}">`;
+  const wlBandRow=(label,k10,k15,k20)=>`
+    <div class="lbl" style="color:var(--blue)">${label}</div>
+    <div class="val">${wlBandIn(k10)}</div>
+    <div class="val">${wlBandIn(k15)}</div>
+    <div class="val">${wlBandIn(k20)}</div>`;
+  $("wlInputs").innerHTML=`
+    <div class="lbl">MOC of annular plate (from §5.5)</div><div class="val" style="grid-column:2/-1;text-align:left;font-size:11px;">${S.annMatl}</div>
+    <div class="lbl">Yield stress of bottom plate (auto)</div><div class="val">${wlYield!=null?fmt(wlYield,0):'—'}</div><div class="u">MPa</div>
+    <div class="lbl" style="color:var(--blue)">Shape factor for tank (C<sub>f</sub>)</div><div class="val">${wlIn('wlShapeFactor',wlCf)}</div><div class="u"></div>
+    <div class="lbl" style="color:var(--blue)">C<sub>pe</sub> (coeff. of ext. pressure)</div><div class="val">${wlIn('wlCpe',wlCpe)}</div><div class="u"></div>
+    <div class="lbl">Diameter incl. insulation (D+2·t<sub>ins</sub>)</div><div class="val">${fmt(wlD,0)}</div><div class="u">mm</div>
+    <div class="lbl" style="color:var(--blue)">Wind velocity</div><div class="val">${wlIn('wlWindVel',wlV)}</div><div class="u">m/s</div>
+    <div class="lbl" style="color:var(--blue)">Tank height</div><div class="val">${wlIn('wlTankHeight',wlH)}</div><div class="u">m</div>
+    <div class="note">Wind factors per height band (blue = editable). Band-15 active only if H&gt;10 m; band-20 only if H&gt;15 m:</div>
+    <div class="lbl" style="color:var(--muted);font-size:11px;">Factor</div>
+    <div class="val" style="color:var(--muted);font-size:11px;text-align:center;">≤10 m</div>
+    <div class="val" style="color:var(--muted);font-size:11px;text-align:center;">≤15 m</div>
+    <div class="val" style="color:var(--muted);font-size:11px;text-align:center;">≤20 m</div>
+    ${wlBandRow('K<sub>1</sub> (probability/risk)','wlK1_10','wlK1_15','wlK1_20')}
+    ${wlBandRow('K<sub>2</sub> (terrain/height)','wlK2_10','wlK2_15','wlK2_20')}
+    ${wlBandRow('K<sub>3</sub> (topographic)','wlK3_10','wlK3_15','wlK3_20')}
+    ${wlBandRow('K<sub>4</sub> (importance/cyclonic)','wlK4_10','wlK4_15','wlK4_20')}
+    ${wlBandRow('K<sub>d</sub> (directionality)','wlKd_10','wlKd_15','wlKd_20')}
+    ${wlBandRow('K<sub>a</sub> (area averaging)','wlKa_10','wlKa_15','wlKa_20')}
+    ${wlBandRow('K<sub>c</sub> (combination)','wlKc_10','wlKc_15','wlKc_20')}
+    ${wlBandRow('Contingency factor','wlCont_10','wlCont_15','wlCont_20')}
+    <div class="note">Design wind pressure P<sub>d</sub> for three height bands:</div>
+    <div class="lbl">Design wind velocity — ≤10 m</div><div class="val">${fmt(b10.Vd,3)}</div><div class="u">m/s</div>
+    <div class="lbl">Design wind velocity — ≤15 m</div><div class="val">${fmt(b15.Vd,3)}</div><div class="u">m/s</div>
+    <div class="lbl">Design wind velocity — ≤20 m</div><div class="val">${fmt(b20.Vd,3)}</div><div class="u">m/s</div>
+    <div class="lbl">Wind pressure P<sub>z</sub> — ≤10 m</div><div class="val">${fmt(b10.Pz,1)}</div><div class="u">N/m²</div>
+    <div class="lbl">Wind pressure P<sub>z</sub> — ≤15 m</div><div class="val">${fmt(b15.Pz,1)}</div><div class="u">N/m²</div>
+    <div class="lbl">Wind pressure P<sub>z</sub> — ≤20 m</div><div class="val">${fmt(b20.Pz,1)}</div><div class="u">N/m²</div>
+    <div class="lbl">Design wind pressure P<sub>d</sub> — ≤10 m</div><div class="val" style="color:var(--accent)">${fmt(Pd10,1)}</div><div class="u">N/m²</div>
+    <div class="lbl">Design wind pressure P<sub>d</sub> — ≤15 m</div><div class="val" style="color:var(--accent)">${fmt(Pd15,1)}</div><div class="u">N/m²</div>
+    <div class="lbl">Design wind pressure P<sub>d</sub> — ≤20 m</div><div class="val" style="color:var(--accent)">${fmt(Pd20,1)}</div><div class="u">N/m²</div>`;
+
+  $("wlMoment").innerHTML=`
+    <div class="lbl">Shear at the bottom (shear wind)</div><div class="val" style="color:var(--accent-2)">${fmt(wlShear,1)}</div><div class="u">kg</div>
+    <div class="lbl">Upward force on roof due to wind</div><div class="val" style="color:var(--accent-2)">${fmt(wlUplift,1)}</div><div class="u">kg</div>
+    <div class="note">Moment at tank bottom = M<sub>horizontal</sub> + M<sub>vertical</sub>:</div>
+    <div class="lbl">M<sub>horizontal</sub></div><div class="val">${fmt(wlMh,1)}</div><div class="u">kg.m</div>
+    <div class="lbl">M<sub>vertical</sub> (uplift · 0.1D)</div><div class="val">${fmt(wlMv,1)}</div><div class="u">kg.m</div>
+    <div class="lbl">Total moment at tank bottom</div><div class="val">${fmt(wlMtot,1)}</div><div class="u">kg.m</div>
+    <div class="lbl">Moment due to wind, +4% margin (M<sub>wind</sub>)</div><div class="val" style="color:var(--blue)">${fmt(wlMwind,1)}</div><div class="u">kg.m</div>`;
+
+  const wlSelfStyle = "width:96px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;";
+  const condRow=(n,name,L,Ltxt,R,Rtxt,ok)=>`
+    <div class="lbl" style="grid-column:1/-1;text-align:left;color:var(--muted);padding-top:4px;"><b>(${n})</b> ${name}</div>
+    <div class="lbl">${Ltxt}</div><div class="val">${fmt(L,3)}</div><div class="u">ton.m</div>
+    <div class="lbl">${Rtxt}</div><div class="val">${fmt(R,3)}</div><div class="u">ton.m</div>
+    <div class="lbl">Result</div><div class="val" style="grid-column:2/-1;text-align:left;"><span class="check ${ok?'ok':'bad'}">${ok?'✓ SATISFIED':'✗ NOT SATISFIED'}</span></div>`;
+  $("wlStability").innerHTML=`
+    <div class="lbl">Self weight of shell + appurtenances (auto)</div><div class="val" style="color:var(--accent-2)">${fmt(wlMDLs,0)}</div><div class="u">kg</div>
+    <div class="lbl">Self weight of roof + insulation (auto)</div><div class="val" style="color:var(--accent-2)">${fmt(wlMDLr,0)}</div><div class="u">kg</div>
+    <div class="lbl">Resisting moment — shell (M<sub>DL</sub>)</div><div class="val">${fmt(wlMDL,0)}</div><div class="u">kg.m</div>
+    <div class="lbl">Resisting moment — roof (M<sub>DLR</sub>)</div><div class="val">${fmt(wlMDLR,0)}</div><div class="u">kg.m</div>
+    <div class="lbl">M<sub>ws</sub> = M<sub>horizontal</sub></div><div class="val">${fmt(wlMws,0)}</div><div class="u">kg.m</div>
+    <div class="lbl">M<sub>w</sub> = M<sub>horizontal</sub> + M<sub>0.6D</sub></div><div class="val">${fmt(wlMw,0)}</div><div class="u">kg.m</div>
+    <div class="lbl">Moment about shell-bottom joint (M<sub>F</sub>)</div><div class="val">${fmt(wlMF,0)}</div><div class="u">kg.m</div>
+    <div class="lbl">w<sub>L</sub> (resisting contents / unit length)</div><div class="val">${fmt(wL,1)}</div><div class="u">kg/m</div>
+    <div class="lbl">Moment — design int. pressure (M<sub>pi</sub>)</div><div class="val">${fmt(wlMPi,0)}</div><div class="u">kg.m</div>
+    <div class="lbl">Moment — operating int. pressure (M<sub>pop</sub>)</div><div class="val">${fmt(wlMPop,0)}</div><div class="u">kg.m</div>
+    ${condRow(1,'0.6·M<sub>w</sub> + M<sub>pi</sub> &lt; M<sub>DL</sub>/1.5 + M<sub>DLR</sub>',c1L,'0.6·M<sub>w</sub> + M<sub>pi</sub>',c1R,'M<sub>DL</sub>/1.5 + M<sub>DLR</sub>',c1OK)}
+    ${condRow(2,'M<sub>w</sub> + F<sub>p</sub>·M<sub>pi</sub> &lt; (M<sub>DL</sub>+M<sub>F</sub>)/2 + M<sub>DLR</sub>',c2L,'M<sub>w</sub> + F<sub>p</sub>·M<sub>pi</sub>',c2R,'(M<sub>DL</sub>+M<sub>F</sub>)/2 + M<sub>DLR</sub>',c2OK)}
+    ${condRow(3,'M<sub>ws</sub> + F<sub>p</sub>·M<sub>pi</sub> &lt; M<sub>DL</sub>/1.5 + M<sub>DLR</sub>',c3L,'M<sub>ws</sub> + F<sub>p</sub>·M<sub>pi</sub>',c3R,'M<sub>DL</sub>/1.5 + M<sub>DLR</sub>',c3OK)}
+    <div class="lbl" style="grid-column:1/-1;text-align:left;padding-top:8px;font-size:13px;">Overall anchorage requirement</div>
+    <div class="val" style="grid-column:1/-1;text-align:left;"><span class="check ${wlAnchorOK?'ok':'bad'}" style="font-size:13px;padding:4px 12px;">${wlAnchorOK?'✓ ANCHORAGE IS NOT REQUIRED':'✗ ANCHORAGE IS REQUIRED'}</span></div>`;
+
+  $("wlAnnular").innerHTML=`
+    <div class="lbl">L<sub>b</sub> (Cl. 5.11.2.3.2)</div><div class="val">${fmt(wlLb,4)}</div><div class="u">m</div>
+    <div class="lbl">0.035·D</div><div class="val">${fmt(wl035D,4)}</div><div class="u">m</div>
+    <div class="lbl">Min. inner width of annular plate (wind)</div><div class="val" style="color:var(--accent)">${fmt(wlMinAnn,3)}</div><div class="u">m</div>
+    <div class="note">Minimum inner annular width = max(0.45, min(L<sub>b</sub>, 0.035·D)). Uses corroded annular thickness (provided − CA) and design liquid level H<sub>d</sub>.</div>`;
+  const wlBandKeys = [];
+  ["K1","K2","K3","K4","Kd","Ka","Kc","Cont"].forEach(f=>{
+    ["10","15","20"].forEach(b=> wlBandKeys.push("wl"+f+"_"+b));
+  });
+  ["wlShapeFactor","wlCpe","wlWindVel","wlTankHeight",...wlBandKeys].forEach(k=>{
+    const el=$("wl_"+k); if(el) el.addEventListener("input",e=>{ S[k]=parseFloat(e.target.value); compute(); });
+  });
+
+  /* ===================== RESPONSE SPECTRA (sheet 6_Spectra) ===================== */
+  // 5%-damped design spectrum (USER INPUT, S.spectrum): period (s) -> horizontal acceleration
+  // for OBE/OLE and SSE/CLE. Rows are sorted by period so interpolation stays monotonic.
+  const SPECTRUM = (S.spectrum||[])
+    .filter(r=>Array.isArray(r) && r.length>=3 && r.every(v=>v!=null && !isNaN(v)))
+    .map(r=>[+r[0],+r[1],+r[2]])
+    .sort((a,b)=>a[0]-b[0]);
+  // Linear interpolation of the spectrum at period T; col 1 = OBE/OLE, 2 = SSE/CLE.
+  function specAt(T,col){
+    if(SPECTRUM.length===0) return 0;
+    if(T<=SPECTRUM[0][0]) return SPECTRUM[0][col];
+    const last=SPECTRUM[SPECTRUM.length-1];
+    if(T>=last[0]) return last[col];
+    for(let i=0;i<SPECTRUM.length-1;i++){
+      const a=SPECTRUM[i], b=SPECTRUM[i+1];
+      if(T>=a[0] && T<=b[0]){
+        const dx=(b[0]-a[0]);
+        const f= dx!==0 ? (b[col]-a[col])/dx : 0;
+        return a[col]+f*(T-a[0]);
+      }
+    }
+    return last[col];
+  }
+
+  /* ===================== SEISMIC DESIGN (sheet 7_Seismic) ===================== */
+  const seH   = S.Hd/1000;                       // J2 max design product level, m (workbook = C20*10^-3)
+  const seD   = S.D/1000;                         // m
+  const sePi  = S.Pint*0.00981;                   // J3 internal pressure, kPa
+  const seE   = S.seisE;                          // J4 elastic modulus, MPa
+  const seRho = S.SG*1000;                        // J5 density of fluid, kg/m³
+  const seTa  = (S.annProvided - S.annCA);        // J6 corroded annular/bottom thk, mm
+  const seTs  = (r1.adopt - r1.ca);               // J7 corroded thk of bottom shell course, mm
+  const seFyA = (MATMAP[S.annMatl]||{}).Y;        // J9 yield of bottom annular plate, MPa
+  const seFyS = (MATMAP[rows[0].c.moc]||{}).Y;    // J10 yield of bottom shell course, MPa
+  const seCi  = S.seisCi;                         // J11
+  // J12 equivalent thickness of tank shell: course-length-weighted adopted thk / shell height
+  const seTU  = totLen>0 ? rows.reduce((a,r)=>a+r.len*r.adopt,0)/(S.shellH/1000) : 0;
+  const seXr  = S.seisXr, seXs = S.seisXs;        // J13, J14
+  // Auto-calculated COG heights (workbook 2_Thickness!T22 for shell; geometry default for roof)
+  // Xs_auto = Σ(len·adopt·(Σlen below + len/2)) / Σ(len·adopt), measured from tank bottom (m)
+  let _cogNum=0, _cogDen=0, _below=0;
+  const xsRows=[];
+  rows.forEach(r=>{
+    const le=r.len||0, ad=r.adopt||0;
+    if(le>0){
+      const midH=_below + le/2;              // height to mid-course from bottom of the listed stack
+      const term=le*ad*midH;                 // workbook column T contribution
+      _cogNum += term; _cogDen += le*ad;
+      xsRows.push({len:le, adopt:ad, midH, term});
+    }
+    _below += le;
+  });
+  const seXsAuto    = _cogDen>0 ? _cogNum/_cogDen : 0;           // T22 thickness-weighted shell COG
+  const seXsAutoMin = Math.max(seXsAuto, (S.shellH/1000)*0.5);   // L14 = MAX(T22, 0.5·H) recommended
+  const seXrAuto    = S.shellH/1000;                             // roof+appurtenances COG ≈ shell height
+  // Dead-load components (kg) — mirror sheet 8_Weights
+  const wtDeadLoad = totWt + totStiffWt + crRingWeight + wRoof + S.crRoofStructWt + roofInsWt + shellInsWt; // K13
+  // Weights (N): Ws = shell + stiffeners + shell insulation ; Wr = roof plate + roof struct + comp ring + roof ins
+  const seWsAuto = (totWt + totStiffWt + shellInsWt)*9.81;                    // L15 auto
+  const seWrAuto = (wRoof + S.crRoofStructWt + crRingWeight + roofInsWt)*9.81;// L16 auto
+  const seWpAuto = (PI*Math.pow(seD,2)*seH*seRho/4)*9.81;                     // L17 auto
+  // J15/J16/J17 — user-input overrides default to the auto value when left blank
+  const seWs  = (S.seisWs!=null && !isNaN(S.seisWs)) ? S.seisWs : seWsAuto;   // J15
+  const seWr  = (S.seisWr!=null && !isNaN(S.seisWr)) ? S.seisWr : seWrAuto;   // J16
+  const seWp  = (S.seisWp!=null && !isNaN(S.seisWp)) ? S.seisWp : seWpAuto;   // J17
+  // Periods
+  const seTi  = (Math.sqrt(seD*seRho)/Math.sqrt(2000*seTU*seE))*seCi*seH;  // J20
+  const seTc  = (0.578/Math.sqrt(Math.tanh(3.68*seH/seD)))*1.8*Math.sqrt(seD); // J21
+  window._seisPeriods={Ti:seTi,Tc:seTc};   // shared with updateSpectrumReadouts()
+  // OLE coefficients (user inputs P29:P31) — matches workbook downstream use
+  const seAi  = S.seisAi, seAc = S.seisAc, seAv = S.seisAv;                // J23,J24,J25
+  const seDH  = seD/seH;                                                   // J26
+  // Impulsive & convective effective weights and heights
+  const seWi  = seDH>=1.333 ? (Math.tanh(0.866*seD/seH)/(0.866*seD/seH))*seWp
+                            : (1-0.218*seD/seH)*seWp;                       // J27
+  const seWc  = (Math.tanh(3.67*seH/seD)*0.23*seD/seH)*seWp;                // J28
+  const seXi  = seDH>=1.333 ? 0.375*seH : (0.5-0.094*seD/seH)*seH;          // J29
+  const seXc  = (1-((Math.cosh(3.67*seH/seD))-1)/((3.67*seH/seD)*Math.sinh(3.67*seH/seD)))*seH; // J30
+  // Base shear & ringwall moment (OLE)
+  const baseV = (a_i,a_c)=>Math.sqrt(a_i*a_i*Math.pow(seWs+seWr+seWi,2)+a_c*a_c*seWc*seWc);
+  const baseM = (a_i,a_c)=>Math.sqrt(a_i*a_i*Math.pow(seWi*seXi+seWs*seXs+seWr*seXr,2)+a_c*a_c*seWc*seWc*seXc*seXc);
+  const seV   = baseV(seAi,seAc);                  // J32
+  const seMrw = baseM(seAi,seAc);                  // J33
+  // Shell-compression / anchorage
+  const seWt  = (wtDeadLoad/(PI*seD))*9.81;        // J35 wt = Ws_total / (pi D), N/m  (uses K13 dead load, kg)
+  const seWint= Math.max(S.Pint, 0.4*S.Pint)*1e-3*seD/4;  // J36 design uplift per unit length, N/m
+  const seWa  = Math.min(99*seTa*Math.sqrt(seFyA*seRho*1e-3*(1-0.4*seAv)*seH),
+                         201.1*seH*seD*seRho*1e-3*(1-0.4*seAv));            // J37
+  const seJ   = seMrw/(((seWt*(1-0.4*seAv))+seWa-0.4*seWint)*Math.pow(seD,2)); // J39
+  const sigMech= (seWt*(1+0.4*seAv)+1.273*seMrw/Math.pow(seD,2))/(1000*seTs); // J45/J47
+  const sigSelf= (((seWt*(1+0.4*seAv)+seWa)/(0.607-0.18667*Math.pow(seJ,2.3)))-seWa)/(1000*seTs); // J46
+  let seSigC;                                       // J44
+  if(S.seisAnchor==="Mechanically Anchored") seSigC=sigMech;
+  else if(seJ<=0.785) seSigC=sigMech; else seSigC=sigSelf;
+  const seA   = seRho*1e-3*seH*Math.pow(seD,2)/Math.pow(seTs,2);            // J50
+  const seFc  = seA>=44 ? Math.min(0.5*seFyS, 83*seTs/seD)
+                        : Math.min(0.5*seFyS, (83*seTs)/(2.5*seD)+7.5*Math.sqrt(seRho*1e-3*seH)); // J49
+  const seCompOK = seSigC < seFc;                   // J54
+  // Seismic freeboard (OLE) — workbook H101 = 0.42 * D(mm) * Ac
+  const seFreeboard = 0.42*S.D*seAc;
+
+  // ---- Dynamic liquid hoop forces, OLE case (one row per shell course with len>0) ----
+  const hoopRows = rows.filter(r=>r.len>0).map(r=>{
+    // running Y measured from liquid surface down to mid-... workbook uses E-col (height from bottom).
+    return r;
+  });
+  // Build cumulative height from bottom for each course (top of stack = shell height).
+  let yTop = S.shellH/1000;
+  const hoopData = [];
+  rows.forEach((r)=>{
+    if(r.len<=0) return;
+    const Y = yTop;                                 // workbook G-col: height of course top from bottom, m
+    yTop -= r.len;
+    const C58=seD, C59=seH, C60=seRho*1e-3, C61=seAi, C62=seAc, C63=seAv, C64=seDH;
+    const Ps = Y>0 ? C60*1000*4.9*(Y-0)*C58 : 0;    // H-col
+    let Pi;                                          // I-col
+    if(Y>0){
+      if(C64>=1.333) Pi = 8.48*1000*C61*C60*C58*C59*((Y/C59)-0.5*Math.pow(Y/C59,2))*Math.tanh(0.866*C64);
+      else if(C64<1.33 && Y<0.75*C58) Pi = 5.22*1000*C61*C60*Math.pow(C58,2)*((Y/(0.75*C58))-0.5*Math.pow(Y/(0.75*C58),2));
+      else Pi = 2.6*C61*C60*Math.pow(C58,2)*1000;
+    } else Pi=0;
+    const Pc = Y>0 ? (1.85*C62*C60*Math.pow(C58,2)*Math.cosh(3.68*(C59-Y)/C58))/(Math.cosh(3.68*C59/C58))*1000 : 0; // J-col
+    const Pv = Ps*C63;                              // S-col Pv(N/m)
+    const tcorr = r.adopt - r.ca;                   // K-col corroded shell course thk
+    const Phmax = tcorr>0 ? (Ps+Pi+Pc+0.4*Pv)*1e-3 : 0;             // L-col
+    const Pvmax = Y>0 ? (Ps+Pv+0.3*(Pi+Pc))*1e-3 : 0;               // M-col
+    const Nrss  = Y>0 ? (Ps+Math.sqrt(Pi*Pi+Pc*Pc+Pv*Pv))*1e-3 : 0; // N-col PRSS
+    const allow = Math.min((MATMAP[r.c.moc]||{St:0}).St*1.33, 0.9*(MATMAP[r.c.moc]||{Y:0}).Y); // P-col
+    const Trss  = allow>0 && Y>0 ? Nrss/allow : 0;  // O-col
+    const Th    = allow>0 && Y>0 ? Phmax/allow : 0; // T-col
+    const Tv    = allow>0 && Y>0 ? Pvmax/allow : 0; // U-col
+    const ok    = Y>0 ? (Math.max(Trss,Th,Tv) < tcorr) : null;      // Q-col
+    hoopData.push({course:r, Y, Ps, Pi, Pc, Pv, tcorr, Nrss, allow, ok});
+  });
+
+  // ---- render Spectra tab ----
+  $("spInputs").innerHTML=`
+    <div class="lbl">Time period — impulsive (T<sub>i</sub>)</div><div class="val" style="color:var(--accent-2)">${fmt(seTi,4)}</div><div class="u">s</div>
+    <div class="lbl">Time period — convective (T<sub>c</sub>)</div><div class="val" style="color:var(--accent-2)">${fmt(seTc,4)}</div><div class="u">s</div>
+    <div class="lbl">Horiz. accel. at T<sub>i</sub> (OBE/OLE)</div><div class="val">${fmt(specAt(seTi,1),4)}</div><div class="u">g</div>
+    <div class="lbl">Horiz. accel. at T<sub>c</sub> (OBE/OLE)</div><div class="val">${fmt(specAt(seTc,1),4)}</div><div class="u">g</div>`;
+  const spIn=(k,v)=>`<input type="text" inputmode="decimal" step="any" id="sp_${k}" value="${v}" style="width:74px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;">`;
+  $("spAdjust").innerHTML=`
+    <div class="lbl" style="color:var(--blue)">Adjustment factor — impulsive (OBE/OLE)</div><div class="val">${spIn('seisAdjImp',S.seisAdjImp)}</div><div class="u"></div>
+    <div class="lbl" style="color:var(--blue)">Adjustment factor — convective (OBE/OLE)</div><div class="val">${spIn('seisAdjConv',S.seisAdjConv)}</div><div class="u"></div>
+    <div class="lbl">Final horiz. accel. at T<sub>i</sub> (OBE/OLE)</div><div class="val" style="color:var(--accent)" id="spFinalTi">${fmt(specAt(seTi,1)*S.seisAdjImp,4)}</div><div class="u">g</div>
+    <div class="lbl">Final horiz. accel. at T<sub>c</sub> (OBE/OLE)</div><div class="val" style="color:var(--accent)" id="spFinalTc">${fmt(specAt(seTc,1)*S.seisAdjConv,4)}</div><div class="u">g</div>
+    <div class="lbl" style="color:var(--blue)">User A<sub>i</sub> (OLE)</div><div class="val">${spIn('seisAi',S.seisAi)}</div><div class="u"></div>
+    <div class="lbl" style="color:var(--blue)">User A<sub>c</sub> (OLE)</div><div class="val">${spIn('seisAc',S.seisAc)}</div><div class="u"></div>
+    <div class="lbl" style="color:var(--blue)">User A<sub>v</sub> (OLE)</div><div class="val">${spIn('seisAv',S.seisAv)}</div><div class="u"></div>`;
+  // ---- editable spectrum table (built once; cell edits do NOT rebuild it, so typing is smooth) ----
+  renderSpectrumTable();
+  ["seisAdjImp","seisAdjConv","seisAi","seisAc","seisAv"].forEach(k=>{
+    const el=$("sp_"+k); if(el) el.addEventListener("input",e=>{S[k]=parseFloat(e.target.value);compute();});
+  });
+
+  // ---- render Seismic tab ----
+  const seIn=(k,v)=>`<input type="text" inputmode="decimal" step="any" id="se_${k}" value="${v}" style="width:90px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;">`;
+  $("seisInputs").innerHTML=`
+    <div class="lbl">Max design product level (H)</div><div class="val">${fmt(seH,2)}</div><div class="u">m</div>
+    <div class="lbl">Internal pressure (P<sub>i</sub>)</div><div class="val">${fmt(sePi,3)}</div><div class="u">kPa</div>
+    <div class="lbl" style="color:var(--blue)">Elastic modulus (E)</div><div class="val">${seIn('seisE',S.seisE)}</div><div class="u">MPa</div>
+    <div class="lbl">Density of fluid (ρ)</div><div class="val">${fmt(seRho,0)}</div><div class="u">kg/m³</div>
+    <div class="lbl">Corroded annular/bottom thk (t<sub>a</sub>)</div><div class="val">${fmt(seTa,2)}</div><div class="u">mm</div>
+    <div class="lbl">Corroded bottom-shell thk (t<sub>s</sub>)</div><div class="val">${fmt(seTs,2)}</div><div class="u">mm</div>
+    <div class="lbl">Yield — annular (F<sub>y,a</sub>)</div><div class="val">${seFyA!=null?fmt(seFyA,0):'—'}</div><div class="u">MPa</div>
+    <div class="lbl">Yield — bottom shell (F<sub>y,s</sub>)</div><div class="val">${seFyS!=null?fmt(seFyS,0):'—'}</div><div class="u">MPa</div>
+    <div class="lbl" style="color:var(--blue)">C<sub>i</sub> from curve (6–9.5)</div><div class="val">${seIn('seisCi',S.seisCi)}</div><div class="u"></div>
+    <div class="lbl">Equivalent shell thk (t<sub>U</sub>)</div><div class="val">${fmt(seTU,3)}</div><div class="u">mm</div>
+    <div class="lbl" style="color:var(--blue)">Height to roof COG (X<sub>r</sub>)</div><div class="val">${seIn('seisXr',S.seisXr)}</div><div class="u">m</div>
+    <div class="lbl" style="font-size:11px;color:var(--muted);">└ auto-calculated (≈ shell height)</div><div class="val" style="color:var(--accent-2)">${fmt(seXrAuto,3)}</div><div class="u">m</div>
+    <div class="lbl" style="color:var(--blue)">Height to shell COG (X<sub>s</sub>)</div><div class="val">${seIn('seisXs',S.seisXs)}</div><div class="u">m</div>
+    <div class="lbl" style="font-size:11px;color:var(--muted);">└ auto (thickness-weighted COG)</div><div class="val" style="color:var(--accent-2)">${fmt(seXsAuto,3)}</div><div class="u">m</div>
+    <div class="lbl" style="font-size:11px;color:var(--muted);">└ auto, recommended max(COG, 0.5·H)</div><div class="val" style="color:var(--accent-2)">${fmt(seXsAutoMin,3)}</div><div class="u">m</div>
+    <div class="lbl" style="color:var(--blue)">Weight of shell &amp; appurtenances (W<sub>s</sub>)</div><div class="val">${seIn('seisWs', S.seisWs!=null?S.seisWs:fmt(seWsAuto,0).replace(/,/g,''))}</div><div class="u">N</div>
+    <div class="lbl" style="font-size:11px;color:var(--muted);">└ auto-calculated</div><div class="val" style="color:var(--accent-2)">${fmt(seWsAuto,0)}</div><div class="u">N</div>
+    <div class="lbl" style="color:var(--blue)">Weight of fixed roof (W<sub>r</sub>)</div><div class="val">${seIn('seisWr', S.seisWr!=null?S.seisWr:fmt(seWrAuto,0).replace(/,/g,''))}</div><div class="u">N</div>
+    <div class="lbl" style="font-size:11px;color:var(--muted);">└ auto-calculated</div><div class="val" style="color:var(--accent-2)">${fmt(seWrAuto,0)}</div><div class="u">N</div>
+    <div class="lbl" style="color:var(--blue)">Weight of tank contents (W<sub>p</sub>)</div><div class="val">${seIn('seisWp', S.seisWp!=null?S.seisWp:fmt(seWpAuto,0).replace(/,/g,''))}</div><div class="u">N</div>
+    <div class="lbl" style="font-size:11px;color:var(--muted);">└ auto-calculated</div><div class="val" style="color:var(--accent-2)">${fmt(seWpAuto,0)}</div><div class="u">N</div>`;
+  $("seisMass").innerHTML=`
+    <div class="lbl">T<sub>i</sub> — impulsive period</div><div class="val">${fmt(seTi,4)}</div><div class="u">s</div>
+    <div class="lbl">T<sub>c</sub> — convective period</div><div class="val">${fmt(seTc,4)}</div><div class="u">s</div>
+    <div class="lbl">A<sub>i</sub> — horiz. impulsive coeff.</div><div class="val">${fmt(seAi,4)}</div><div class="u"></div>
+    <div class="lbl">A<sub>c</sub> — horiz. convective coeff.</div><div class="val">${fmt(seAc,4)}</div><div class="u"></div>
+    <div class="lbl">A<sub>v</sub> — vertical coeff.</div><div class="val">${fmt(seAv,4)}</div><div class="u"></div>
+    <div class="lbl">D/H ratio</div><div class="val">${fmt(seDH,4)}</div><div class="u"></div>
+    <div class="lbl">Impulsive weight (W<sub>i</sub>)</div><div class="val">${fmt(seWi,0)}</div><div class="u">N</div>
+    <div class="lbl">Convective weight (W<sub>c</sub>)</div><div class="val">${fmt(seWc,0)}</div><div class="u">N</div>
+    <div class="lbl">Impulsive height (X<sub>i</sub>)</div><div class="val">${fmt(seXi,3)}</div><div class="u">m</div>
+    <div class="lbl">Convective height (X<sub>c</sub>)</div><div class="val">${fmt(seXc,3)}</div><div class="u">m</div>`;
+  $("seisShear").innerHTML=`
+    <div class="lbl">Base shear V — OLE</div><div class="val" style="color:var(--accent)">${fmt(seV,0)}</div><div class="u">N</div>
+    <div class="lbl">Ringwall moment M<sub>rw</sub> — OLE</div><div class="val" style="color:var(--accent)">${fmt(seMrw,0)}</div><div class="u">N·m</div>`;
+  const anchSel=`<select id="se_seisAnchor" style="width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:6px 7px;font-family:'Spline Sans Mono';font-size:11.5px;font-weight:600;">
+    <option value="Self Anchored"${S.seisAnchor==="Self Anchored"?' selected':''}>Self Anchored</option>
+    <option value="Mechanically Anchored"${S.seisAnchor==="Mechanically Anchored"?' selected':''}>Mechanically Anchored</option></select>`;
+  $("seisComp").innerHTML=`
+    <div class="lbl">Anchorage condition</div><div class="val" style="grid-column:2/-1;text-align:left;">${anchSel}</div>
+    <div class="lbl">Weight of shell &amp; roof (w<sub>t</sub>)</div><div class="val">${fmt(seWt,1)}</div><div class="u">N/m</div>
+    <div class="lbl">Design uplift / unit length (w<sub>int</sub>)</div><div class="val">${fmt(seWint,3)}</div><div class="u">N/m</div>
+    <div class="lbl">Resisting force on annulus (w<sub>a</sub>)</div><div class="val">${fmt(seWa,1)}</div><div class="u">N/m</div>
+    <div class="lbl">Anchorage ratio (J)</div><div class="val" style="color:var(--accent)">${fmt(seJ,4)}</div><div class="u"></div>
+    <div class="lbl">Max shell compression (σ<sub>c</sub>)</div><div class="val" style="color:var(--accent-2)">${fmt(seSigC,4)}</div><div class="u">MPa</div>
+    <div class="lbl">Allowable compression (F<sub>c</sub>)</div><div class="val">${fmt(seFc,4)}</div><div class="u">MPa</div>
+    <div class="lbl">Parameter A = G·H·D²/t<sub>s</sub>²</div><div class="val">${fmt(seA,2)}</div><div class="u"></div>
+    <div class="lbl">Shell compression check</div>
+    <div class="val" style="grid-column:2/-1;text-align:left;"><span class="check ${seCompOK?'ok':'bad'}">${seCompOK?'✓ SAFE':'✗ NOT SAFE'}</span></div>`;
+  $("se_seisAnchor").addEventListener("change",e=>{S.seisAnchor=e.target.value;compute();});
+  ["seisE","seisCi","seisXr","seisXs"].forEach(k=>{
+    const el=$("se_"+k); if(el) el.addEventListener("input",e=>{S[k]=parseFloat(e.target.value);compute();});
+  });
+  ["seisWs","seisWr","seisWp"].forEach(k=>{
+    const el=$("se_"+k); if(el) el.addEventListener("input",e=>{
+      const v=e.target.value.trim();
+      S[k]= v==="" ? null : parseFloat(v);   // blank -> revert to auto-calculated value
+      compute();
+    });
+  });
+  $("hoopBodyOLE").innerHTML = hoopData.map((h,i)=>`<tr>
+    <td>${i+1}</td><td>${fmt(h.Y,2)}</td><td>${fmt(h.Ps,0)}</td><td>${fmt(h.Pi,0)}</td>
+    <td>${fmt(h.Pc,0)}</td><td>${fmt(h.Pv,0)}</td><td>${fmt(h.tcorr,1)}</td>
+    <td>${fmt(h.Nrss,3)}</td><td>${fmt(h.allow,1)}</td>
+    <td><span class="check ${h.ok?'ok':'bad'}" style="font-size:10px;padding:2px 7px;">${h.ok?'OK':'CHECK'}</span></td></tr>`).join("");
+  $("seisFreeboard").innerHTML=`
+    <div class="lbl">Seismic freeboard (OLE) = 0.42·D·A<sub>c</sub></div><div class="val" style="color:var(--accent)">${fmt(seFreeboard,1)}</div><div class="u">mm</div>`;
+  // ---- Xs (shell centroid) calculation table ----
+  if($("xsBody")){
+    $("xsBody").innerHTML = xsRows.map((x,i)=>`<tr>
+      <td>${i+1}</td>
+      <td>${fmt(x.len,2)}</td>
+      <td>${fmt(x.adopt,1)}</td>
+      <td>${fmt(x.midH,2)}</td>
+      <td style="color:var(--accent)">${fmt(x.term,1)}</td></tr>`).join("");
+    $("xsFoot").innerHTML = `<tr>
+      <td colspan="4" class="lcol">Σ(D·t) = ${fmt(_cogDen,1)} &nbsp;·&nbsp; ΣT = ${fmt(_cogNum,1)} &nbsp;→&nbsp; X<sub>s</sub> = ΣT / Σ(D·t)</td>
+      <td style="color:var(--accent-2)">X<sub>s</sub> = ${fmt(seXsAuto,2)} m</td></tr>`;
+  }
+
+  /* ===================== WEIGHT SUMMARY (sheet 8_Weights) ===================== */
+  const wtShell    = totWt;                        // K3
+  const wtStiff    = totStiffWt;                   // K4
+  const wtRoofPl   = wRoof;                         // K5
+  const wtRoofStr  = S.crRoofStructWt;              // K6
+  const wtAnnular  = wAnnular;                      // K7
+  const wtBottom   = wBottom;                       // K8
+  const wtCompRing = crRingWeight;                  // K9
+  const wtRoofIns  = roofInsWt;                     // K10
+  const wtShellIns = shellInsWt;                    // K11
+  // New appurtenance weights (8_Weights K12:K14) — based on tank height (C19) and diameter (C18)
+  const wtPlatform = Math.ceil((S.shellH*1e-3)/5)*100;   // K12 ROUNDUP(H/5,0)*100, kg
+  const wtStairway = (S.shellH*1e-3)*90;                 // K13 H*90, kg
+  const wtHandrail = PI*(S.D*1e-3)*10;                   // K14 pi*D*10, kg
+  // K16 Dead load including insulation (uncorroded) = shell+stiff+compRing+roofPlate+roofStruct+roofIns+shellIns
+  const wtDead = wtShell+wtStiff+wtCompRing+wtRoofPl+wtRoofStr+wtRoofIns+wtShellIns;
+  // ---- Corroded weights (8_Weights M-column) ----
+  const wtShellC   = totCwt;                        // M3  corroded shell weight (2_Thickness R22)
+  const wtStiffC   = wtStiff;                       // M4  =K4
+  const wtRoofPlC  = wRoofC;                         // M5  corroded roof plate (2_Thickness L89)
+  const wtRoofStrC = wtRoofStr;                      // M6  =K6
+  const wtAnnularC = wAnnular*((annProvided-S.annCA)/annProvided||0); // M7 corroded annular (2_Thickness P55)
+  const wtBottomC  = wBottom*((S.bottomThk - 0)/S.bottomThk||0);       // M8 (bottom CA treated as 0 in workbook P56 uses M53=10)
+  const wtCompRingC= wtCompRing;                     // M9  =K9
+  const wtRoofInsC = wtRoofIns;                      // M10 =K10
+  const wtShellInsC= wtShellIns;                     // M11 =K11
+  // M16 Dead load incl. insulation (CORRODED) = M3+M4+M9+M5+M6+M10+M11
+  const wtDeadC = wtShellC+wtStiffC+wtCompRingC+wtRoofPlC+wtRoofStrC+wtRoofInsC+wtShellInsC;
+  // Seismic shear/moment in tonne and tonne·m (OBE/OLE)
+  const shearOBE = seV/9.81/1000;
+  const momOBE   = seMrw/9.81/1000;
+  $("wtSummary").innerHTML=`
+    <div class="lbl">Weight of shell</div><div class="val">${fmt(wtShell,0)}</div><div class="u">kg</div>
+    <div class="lbl">Weight of stiffeners</div><div class="val">${fmt(wtStiff,0)}</div><div class="u">kg</div>
+    <div class="lbl">Weight of roof plate</div><div class="val">${fmt(wtRoofPl,0)}</div><div class="u">kg</div>
+    <div class="lbl">Weight of roof structure</div><div class="val">${fmt(wtRoofStr,0)}</div><div class="u">kg</div>
+    <div class="lbl">Weight of annular plate</div><div class="val">${fmt(wtAnnular,0)}</div><div class="u">kg</div>
+    <div class="lbl">Weight of bottom plate</div><div class="val">${fmt(wtBottom,0)}</div><div class="u">kg</div>
+    <div class="lbl">Weight of compression ring / top stiffener</div><div class="val">${fmt(wtCompRing,0)}</div><div class="u">kg</div>
+    <div class="lbl">Weight of insulation on roof</div><div class="val">${fmt(wtRoofIns,0)}</div><div class="u">kg</div>
+    <div class="lbl">Weight of insulation on shell</div><div class="val">${fmt(wtShellIns,0)}</div><div class="u">kg</div>
+    <div class="lbl">Weight of platform</div><div class="val">${fmt(wtPlatform,0)}</div><div class="u">kg</div>
+    <div class="lbl">Weight of spiral stairway</div><div class="val">${fmt(wtStairway,0)}</div><div class="u">kg</div>
+    <div class="lbl">Weight of handrail</div><div class="val">${fmt(wtHandrail,0)}</div><div class="u">kg</div>
+    <div class="lbl" style="padding-top:6px;">Dead load incl. insulation — uncorroded</div><div class="val" style="color:var(--accent);padding-top:6px;">${fmt(wtDead,0)}</div><div class="u">kg</div>
+    <div class="lbl">Dead load incl. insulation — corroded (M16)</div><div class="val" style="color:var(--accent-2)">${fmt(wtDeadC,0)}</div><div class="u">kg</div>`;
+  $("wtSeismic").innerHTML=`
+    <div class="lbl">Shear force (OBE / OLE)</div><div class="val" style="color:var(--accent-2)">${fmt(shearOBE,1)}</div><div class="u">tonne</div>
+    <div class="lbl">Bending moment (OBE / OLE)</div><div class="val" style="color:var(--accent-2)">${fmt(momOBE,1)}</div><div class="u">tonne·m</div>`;
+
+  /* ===================== ANCHORAGE DESIGN (sheet 9_Anchor) ===================== */
+  // Standard metric coarse-thread bolt nominal stress areas (mm²) — AB/AC columns.
+  const BOLT_AREA = {M10:58,M12:84,M14:115,M16:157,M18:192,M20:245,M22:303,M24:353,
+    M27:459,M30:561,M33:694,M36:817,M39:976,M42:1120,M45:1300,M48:1470,M52:1760,
+    M56:2030,M60:2360,M64:2680,M68:3060,M72:3460,M76:3890,M80:4340,M85:4950,
+    M90:5590,M95:6270,M100:7000};
+  const aTensArea = BOLT_AREA[S.anchBoltDia] || 561;            // AC nominal stress area, mm²
+  const aRootDia  = Math.sqrt(4*aTensArea/PI);                  // AD root dia
+  const aCorrRoot = aRootDia - S.anchBoltCA;                    // AE corroded root dia
+  const aCorrArea = PI*Math.pow(aCorrRoot,2)/4;                 // AF corroded root area, mm²/bolt (D12)
+  const aD_mm     = S.D;                                         // tank diameter, mm
+  const aDeadC    = wtDeadC;                                     // corroded total dead load (8_Weights M16), kg
+  // Uplift load cases — net uplift in kg (Table 5.20). Internal pressures in mmWC -> kPa via *0.00981 not used;
+  // workbook uses Pi(mmWC) directly with D(mm) and 10^-6 -> consistent kg units as below.
+  const Pi_kpa = S.Pint, Pt_kpa = S.Ptest;                      // C9, C10 (treated as the workbook does)
+  const aDeg = PI*Math.pow(aD_mm,2)*1e-6/4;                      // pi/4 * D^2 *1e-6 (area term, m² scale used in workbook)
+  const u_design = Pi_kpa*aDeg - aDeadC;                        // case1 design pressure
+  const u_test   = Pt_kpa*aDeg - aDeadC;                        // case2 test pressure
+  const u_wind   = (4*wlMwind/(aD_mm*1e-3)) + wlUplift - aDeadC;   // case3 wind: 4*Mws/D + J26(roof uplift) - W2
+  const u_seis   = ((4*(seMrw/9.81))/(aD_mm*1e-3)) - (1-0.4*seAv)*aDeadC; // case4 seismic OLE: 4*Mrw/D - W2(1-0.4Av)
+  const presComb = Math.max(Pi_kpa*0.4, S.Pext)* aDeg;          // MAX(C9*0.4, C11)*area  (C11=Pext)
+  const u_dpWind = u_wind + presComb;                           // case6 design pressure + wind
+  const u_dpSeis = u_seis + presComb;                           // case7 design pressure + seismic
+  const fy = S.anchBoltYield;                                    // D10 bolt yield (MPa)
+  const aCases = [
+    {n:1, name:"Design Pressure",               f:"π/4·D²·Pᵢ − W₂",                 U:u_design, allow:5*fy/12},
+    {n:2, name:"Test Pressure",                 f:"π/4·D²·Pₜ − W₂",                 U:u_test,   allow:5*fy/9},
+    {n:3, name:"Wind Load",                     f:"4·Mws/D − W₂",                    U:u_wind,   allow:0.8*fy},
+    {n:4, name:"Seismic Load (OLE)",            f:"4·Mrw/D − W₂(1−0.4Aᵥ)",          U:u_seis,   allow:0.8*fy},
+    {n:6, name:"Design Pressure + Wind",        f:"case 3 + Fp·(Pᵢ)·area",          U:u_dpWind, allow:5*fy/9},
+    {n:7, name:"Design Pressure + Seismic(OLE)",f:"case 4 + Fp·Pᵢ·area",            U:u_dpSeis, allow:0.8*fy},
+  ];
+  const uMax = Math.max(...aCases.map(c=>c.U));                  // E23 max uplift
+  const govCase = aCases.find(c=>c.U===uMax) || aCases[0];
+  const fAllow  = govCase.allow;                                // F23 governing allowable (MPa)
+  const fAllowKg= fAllow/9.81;                                  // F24 kg/mm²
+  // ---- Case 8: Failure pressure (Pf) — frangibility check, NOT part of governing MAX ----
+  // Workbook 9_Anchor row 22: Pf = 1.6·P − 0.000746·DLR/D²  (P=C9 mmWC, DLR=8_Weights!K5 uncorroded
+  // roof plate weight kg, D=C18 in m). U8 = 1.5·Pf·(π/4)·D²·10⁻⁶ − W3 (W3 = K16 uncorroded dead load).
+  const aPf   = 1.6*Pi_kpa - (0.000746*wRoof/(Math.pow(aD_mm,2)*1e-6));   // D22
+  const u_fail= (1.5*aPf*aDeg) - wtDead;                                  // E22 (W3 = wtDead uncorroded)
+  const aCase8= {n:8, name:"Failure pressure (Pf)", f:"1.5·Pf·π/4·D² − W₃,  Pf=1.6P−0.000746·DLR/D²", U:u_fail, allow:fy};
+  const nReqRaw = (aCorrArea>0 && fAllowKg>0 && uMax>0) ? uMax/(aCorrArea*fAllowKg) : 0; // E8 min bolts
+  const nReq    = Math.ceil(nReqRaw);
+  const nUsed   = S.anchNumBolts;                               // D8 user value
+  const spacing = nUsed>0 ? PI*S.anchBCD/nUsed : 0;             // D11 spacing
+  const anchOK  = nUsed >= nReq && uMax>0;
+  const required = (S.anchRequired||"").toUpperCase()==="YES";
+
+  // ---- render Anchorage tab ----
+  const aIn=(k,v,w=90)=>`<input type="text" inputmode="decimal" step="any" id="anch_${k}" value="${v}" style="width:${w}px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;">`;
+  const boltOpts = Object.keys(BOLT_AREA).map(b=>`<option value="${b}"${b===S.anchBoltDia?' selected':''}>${b}</option>`).join("");
+  const reqSel = `<select id="anch_anchRequired" style="background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:5px 8px;font-family:'Spline Sans Mono';font-weight:600;">
+    <option value="YES"${required?' selected':''}>YES</option><option value="NO"${!required?' selected':''}>NO</option></select>`;
+  $("anchInputs").innerHTML=`
+    <div class="lbl" style="color:var(--blue)">Anchorage required?</div><div class="val" style="grid-column:2/-1;text-align:left;">${reqSel}</div>
+    <div class="lbl" style="color:var(--blue)">Anchor bolt size</div><div class="val" style="grid-column:2/-1;text-align:left;"><select id="anch_anchBoltDia" style="background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:5px 8px;font-family:'Spline Sans Mono';font-weight:600;">${boltOpts}</select></div>
+    <div class="lbl" style="color:var(--blue)">Number of anchor bolts</div><div class="val">${aIn('anchNumBolts',S.anchNumBolts)}</div><div class="u"></div>
+    <div class="lbl" style="color:var(--blue)">Anchor bolt circle dia (BCD)</div><div class="val">${aIn('anchBCD',S.anchBCD)}</div><div class="u">mm</div>
+    <div class="lbl" style="color:var(--blue)">Bolt MOC yield stress</div><div class="val">${aIn('anchBoltYield',S.anchBoltYield)}</div><div class="u">MPa</div>
+    <div class="note">Max yield 380 MPa per API-650 Table 5.20a.</div>`;
+  $("anchBolt").innerHTML=`
+    <div class="lbl">Nominal stress area (per bolt)</div><div class="val">${fmt(aTensArea,0)}</div><div class="u">mm²</div>
+    <div class="lbl">Root diameter</div><div class="val">${fmt(aRootDia,2)}</div><div class="u">mm</div>
+    <div class="lbl">Corroded root diameter (−${fmt(S.anchBoltCA,0)} mm)</div><div class="val">${fmt(aCorrRoot,2)}</div><div class="u">mm</div>
+    <div class="lbl">Corroded area per anchor</div><div class="val" style="color:var(--accent-2)">${fmt(aCorrArea,1)}</div><div class="u">mm²</div>
+    <div class="lbl">Spacing (π·BCD/N)</div><div class="val">${fmt(spacing,1)}</div><div class="u">mm</div>`;
+  $("anchBody").innerHTML = aCases.map(c=>{
+    const neg = c.U<=0;
+    return `<tr>
+      <td>${c.n}</td><td style="text-align:left;">${c.name}</td><td style="text-align:left;font-size:11px;color:var(--muted);">${c.f}</td>
+      <td style="${c.U===uMax?'color:var(--accent);font-weight:700;':''}">${fmt(c.U,0)}</td>
+      <td>${fmt(c.allow,1)}</td></tr>`;
+  }).join("") + `<tr style="border-top:2px solid var(--line);">
+      <td>${aCase8.n}</td>
+      <td style="text-align:left;">${aCase8.name}</td>
+      <td style="text-align:left;font-size:10.5px;color:var(--muted);">${aCase8.f}</td>
+      <td style="color:var(--blue);font-weight:700;">${fmt(aCase8.U,0)}</td>
+      <td>${fmt(aCase8.allow,1)}</td></tr>
+    <tr><td colspan="5" class="lcol" style="text-align:left;color:var(--muted);font-size:10.5px;padding-top:2px;">
+      Case 8 (failure / frangibility pressure) is reported for reference per API-650 Table 5.20 and is <b>not</b> included in the governing maximum uplift. P<sub>f</sub> = ${fmt(aPf,1)} mmWC · DLR (uncorroded roof plate) = ${fmt(wRoof,0)} kg.</td></tr>`;
+  $("anchResult").innerHTML = !required ? `
+      <div class="lbl">Anchorage status</div><div class="val" style="grid-column:2/-1;text-align:left;"><span class="check ok">Anchorage NOT required — calculation skipped</span></div>`
+    : `
+      <div class="lbl">Governing load case</div><div class="val" style="grid-column:2/-1;text-align:left;color:var(--accent);">${govCase.n}. ${govCase.name}</div>
+      <div class="lbl">Maximum net uplift (U<sub>max</sub>)</div><div class="val" style="color:var(--accent)">${fmt(uMax,0)}</div><div class="u">kg</div>
+      <div class="lbl">Governing allowable stress</div><div class="val">${fmt(fAllow,1)}</div><div class="u">MPa</div>
+      <div class="lbl">Minimum bolts required</div><div class="val" style="color:var(--accent-2)">${fmt(nReq,0)}</div><div class="u"></div>
+      <div class="lbl">Bolts provided</div><div class="val">${fmt(nUsed,0)}</div><div class="u"></div>
+      <div class="lbl">Anchorage check</div><div class="val" style="grid-column:2/-1;text-align:left;"><span class="check ${anchOK?'ok':'bad'}">${anchOK?'✓ ADEQUATE':'✗ INCREASE BOLTS / SIZE'}</span></div>`;
+  $("anch_anchRequired").addEventListener("change",e=>{S.anchRequired=e.target.value;compute();});
+  $("anch_anchBoltDia").addEventListener("change",e=>{S.anchBoltDia=e.target.value;compute();});
+  ["anchNumBolts","anchBCD","anchBoltYield"].forEach(k=>{
+    const el=$("anch_"+k); if(el) el.addEventListener("input",e=>{S[k]=parseFloat(e.target.value);compute();});
+  });
+
+  /* ===================== SUMMARY ===================== */
+  const grandSteel = totWt + wAnnular + wBottom + wRoof;
+  const maxReq = Math.max(...rows.filter(r=>r.req>0).map(r=>r.req), 0);
+  const anyUnder = rows.some(r=>r.req>0 && r.adopt < r.req-1e-6);
+  $("summary").innerHTML=`
+    <div class="stat"><div class="k">Tank Ø × Height</div><div class="v">${fmt(S.D/1000,1)}<small>×${fmt(S.shellH/1000,1)} m</small></div></div>
+    <div class="stat"><div class="k">Net Working Cap.</div><div class="v green">${fmt(netCap,0)}<small>m³</small></div></div>
+    <div class="stat"><div class="k">Stored Cap.</div><div class="v blue">${fmt(storedCap,0)}<small>m³</small></div></div>
+    <div class="stat"><div class="k">Max Req. Thk.</div><div class="v">${fmt(maxReq,1)}<small>mm</small></div></div>
+    <div class="stat"><div class="k">Shell Weight</div><div class="v accent">${fmt(totWt,0)}<small>kg</small></div></div>
+    <div class="stat"><div class="k">Roof Weight</div><div class="v accent">${fmt(wRoof,0)}<small>kg</small></div></div>
+    <div class="stat"><div class="k">Total Steel</div><div class="v accent">${fmt(grandSteel,0)}<small>kg</small></div></div>
+    <div class="stat"><div class="k">Design Ext. Press.</div><div class="v blue">${fmt(PextDesign,2)}<small>kPa</small></div></div>
+    <div class="stat"><div class="k">Wind Girders Req.</div><div class="v accent">${nStiff}<small>nos</small></div></div>
+    <div class="stat"><div class="k">Comp. Ring Wt.</div><div class="v accent">${fmt(crRingWeight,0)}<small>kg</small></div></div>
+    <div class="stat"><div class="k">Insulation Wt.</div><div class="v accent">${fmt(totalInsWt,0)}<small>kg</small></div></div>
+    <div class="stat"><div class="k">Wind Overturning M</div><div class="v blue">${fmt(wlMwind*1e-3,0)}<small>ton·m</small></div></div>
+    <div class="stat"><div class="k">Seismic Base Shear (OLE)</div><div class="v accent">${fmt(seV/9.81/1000,0)}<small>tonne</small></div></div>
+    <div class="stat"><div class="k">Ringwall Moment (OLE)</div><div class="v blue">${fmt(seMrw/9.81/1000,0)}<small>ton·m</small></div></div>
+    <div class="stat"><div class="k">Shell Compression</div><div class="v" style="font-size:14px;margin-top:8px;">
+      <span class="check ${seCompOK?'ok':'bad'}">${seCompOK?'✓ SAFE':'✗ NOT SAFE'}</span></div></div>
+    <div class="stat"><div class="k">Wind Anchorage</div><div class="v" style="font-size:14px;margin-top:8px;">
+      <span class="check ${wlAnchorOK?'ok':'bad'}">${wlAnchorOK?'✓ NOT REQUIRED':'✗ REQUIRED'}</span></div></div>
+    <div class="stat"><div class="k">Thickness Check</div><div class="v ${anyUnder?'':''}" style="font-size:14px;margin-top:8px;">
+      <span class="check ${anyUnder?'bad':'ok'}">${anyUnder?'✗ COURSE UNDER-THICK':'✓ ALL ADEQUATE'}</span></div></div>`;
+}
+
+/* ===================== REPORT EXPORT (Word / PDF) =====================
+   Builds one structured report from the live, already-computed DOM so the
+   document always matches what is on screen. Captures, in app order:
+   every tab -> every card (title) -> inputs, output tables, key/value
+   result panels, and the governing formulae. Word = downloadable .doc that
+   opens natively in MS Word; PDF = print-to-PDF of the same report. */
+
+function _txt(el){ return (el?el.textContent:"").replace(/\s+/g," ").trim(); }
+
+// Convert a live <table> into clean report-table HTML (header + body + foot).
+function _tableToReport(tbl){
+  const sec=[];
+  const head=tbl.querySelector("thead");
+  if(head){
+    const hcells=[...head.querySelectorAll("th")].map(th=>`<th>${th.innerHTML.replace(/<br\s*\/?>/gi," ")}</th>`).join("");
+    sec.push(`<thead><tr>${hcells}</tr></thead>`);
+  }
+  const rowsHtml=[];
+  tbl.querySelectorAll("tbody tr, tfoot tr").forEach(tr=>{
+    // skip the in-app control row (add/remove buttons)
+    if(tr.querySelector("button")) return;
+    const cells=[...tr.children].map(td=>{
+      const inp=td.querySelector("input,select");
+      let v;
+      if(inp){ v = inp.tagName==="SELECT" ? (inp.options[inp.selectedIndex]?inp.options[inp.selectedIndex].text:"") : inp.value; }
+      else v = td.innerHTML.replace(/<br\s*\/?>/gi," ");
+      const span=td.getAttribute("colspan");
+      return `<td${span?` colspan="${span}"`:""}>${v}</td>`;
+    }).join("");
+    if(cells) rowsHtml.push(`<tr>${cells}</tr>`);
+  });
+  if(rowsHtml.length) sec.push(`<tbody>${rowsHtml.join("")}</tbody>`);
+  else return "";   // no data rows -> omit the table entirely
+  return `<table class="rpt">${sec.join("")}</table>`;
+}
+
+// Convert a .kv result panel into a two/three-column report table.
+function _kvToReport(kv){
+  const kids=[...kv.children];
+  const rows=[]; let cur=[];
+  kids.forEach(ch=>{
+    if(ch.classList.contains("note")){
+      if(cur.length){ rows.push(cur); cur=[]; }
+      rows.push([{note:true, html:ch.innerHTML}]);
+      return;
+    }
+    const inp=ch.querySelector("input,select");
+    let html;
+    if(inp){ html = inp.tagName==="SELECT" ? (inp.options[inp.selectedIndex]?inp.options[inp.selectedIndex].text:"") : inp.value; }
+    else html = ch.innerHTML;
+    cur.push({lbl:ch.classList.contains("lbl"), val:ch.classList.contains("val"), u:ch.classList.contains("u"), html});
+    // a row is lbl + val (+ optional u). Flush when we have a val followed by next lbl.
+    if(ch.classList.contains("u") || (ch.classList.contains("val") && !kids[kids.indexOf(ch)+1])){
+      rows.push(cur); cur=[];
+    } else if(ch.classList.contains("val")){
+      const nxt=kids[kids.indexOf(ch)+1];
+      if(!nxt || !nxt.classList.contains("u")){ rows.push(cur); cur=[]; }
+    }
+  });
+  if(cur.length) rows.push(cur);
+  const trs=rows.map(cells=>{
+    if(cells[0] && cells[0].note) return `<tr><td colspan="3" class="rnote">${cells[0].html}</td></tr>`;
+    const lbl=cells.find(c=>c.lbl), val=cells.find(c=>c.val), u=cells.find(c=>c.u);
+    return `<tr><td class="rlbl">${lbl?lbl.html:""}</td><td class="rval">${val?val.html:""}</td><td class="runit">${u?u.html:""}</td></tr>`;
+  }).join("");
+  return `<table class="rpt kv">${trs}</table>`;
+}
+
+// Convert the General Information input grid into a report table.
+function _genInputsToReport(host){
+  const rows=[];
+  [...host.children].forEach(node=>{
+    if(node.classList.contains("section-label")){ rows.push(`<tr><td colspan="3" class="rsub">${_txt(node)}</td></tr>`); }
+    else if(node.classList.contains("field-grid")){
+      node.querySelectorAll(".field").forEach(f=>{
+        const lab=_txt(f.querySelector("label"));
+        const inp=f.querySelector("input,select");
+        const val=inp?inp.value:"";
+        const unit=_txt(f.querySelector(".unit"));
+        rows.push(`<tr><td class="rlbl">${lab}</td><td class="rval">${val}</td><td class="runit">${unit}</td></tr>`);
+      });
+    } else if(node.classList.contains("field")){
+      const lab=_txt(node.querySelector("label"));
+      const inp=node.querySelector("input,select");
+      const val=inp?inp.value:"";
+      const unit=_txt(node.querySelector(".unit"));
+      rows.push(`<tr><td class="rlbl">${lab}</td><td class="rval">${val}</td><td class="runit">${unit}</td></tr>`);
+    }
+  });
+  return `<table class="rpt kv">${rows.join("")}</table>`;
+}
+
+// Convert the Design Summary stat grid into a report table.
+function _summaryToReport(grid){
+  const trs=[...grid.querySelectorAll(".stat")].map(s=>{
+    const k=_txt(s.querySelector(".k")); const v=_txt(s.querySelector(".v"));
+    return `<tr><td class="rlbl">${k}</td><td class="rval">${v}</td></tr>`;
+  }).join("");
+  return `<table class="rpt kv">${trs}</table>`;
+}
+
+function buildReportBody(){
+  try{ renderSpectrumTable(true); }catch(_){ }   // ensure lazy spectrum table is populated
+  const tabBtns=[...document.querySelectorAll(".tab-btn")];
+  const out=[];
+  tabBtns.forEach(btn=>{
+    const name=btn.dataset.tab;
+    const panel=document.getElementById("tab-"+name);
+    if(!panel) return;
+    const tabTitle=_txt(btn).replace(/^\d+\s*/,"");
+    out.push(`<h1 class="rtab">${tabTitle}</h1>`);
+    panel.querySelectorAll(".card").forEach(card=>{
+      const h2=card.querySelector("h2");
+      if(h2) out.push(`<h2 class="rcard">${_txt(h2)}</h2>`);
+      // walk the card body in document order, handling each content block
+      const blocks=card.querySelectorAll(".body, .summary-grid");
+      const scope = blocks.length ? blocks : [card];
+      scope.forEach(b=>{
+        [...b.querySelectorAll(":scope > *, :scope")].forEach(()=>{});
+        // general inputs
+        if(b.id==="generalInputs"){ out.push(_genInputsToReport(b)); return; }
+        if(b.classList.contains("summary-grid")){ out.push(_summaryToReport(b)); return; }
+        // else iterate children of the body
+        [...b.children].forEach(ch=>{
+          if(ch.tagName==="TABLE"){ out.push(_tableToReport(ch)); }
+          else if(ch.classList.contains("kv")){ out.push(_kvToReport(ch)); }
+          else if(ch.classList.contains("formula")){ out.push(`<div class="rformula"><b>Formulae:</b> ${ch.innerHTML}</div>`); }
+          else if(ch.classList.contains("tablewrap")){ const t=ch.querySelector("table"); if(t) out.push(_tableToReport(t)); }
+          else if(ch.querySelector && ch.querySelector("table")){ ch.querySelectorAll("table").forEach(t=>out.push(_tableToReport(t))); }
+        });
+      });
+    });
+  });
+  return out.join("\n");
+}
+
+function reportDocument(){
+  const now=new Date();
+  const meta=`Job No: ${S.jobNo||""} &nbsp;|&nbsp; Client: ${S.client||""} &nbsp;|&nbsp; Equipment: ${S.equip||""} &nbsp;|&nbsp; Service: ${S.service||""}`;
+  const css=`
+    body{font-family:'Segoe UI',Arial,sans-serif;color:#111;font-size:11px;line-height:1.4;margin:24px;}
+    .rhead{border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:14px;}
+    .rhead h1{font-size:20px;margin:0 0 4px;}
+    .rhead .meta{font-size:10.5px;color:#333;}
+    .rhead .date{font-size:10px;color:#666;margin-top:3px;}
+    h1.rtab{font-size:15px;background:#1a2430;color:#fff;padding:6px 10px;margin:18px 0 8px;border-radius:3px;page-break-after:avoid;}
+    h2.rcard{font-size:12.5px;color:#0b2e6b;border-bottom:1px solid #bbb;padding-bottom:3px;margin:12px 0 6px;page-break-after:avoid;}
+    table.rpt{border-collapse:collapse;width:100%;margin:4px 0 10px;font-size:10.5px;page-break-inside:auto;}
+    table.rpt th{background:#e8edf3;border:1px solid #aab;padding:4px 6px;text-align:right;font-size:10px;}
+    table.rpt th:nth-child(2){text-align:left;}
+    table.rpt td{border:1px solid #ccc;padding:3px 6px;text-align:right;vertical-align:top;}
+    table.rpt.kv td.rlbl{text-align:left;width:55%;color:#222;}
+    table.rpt.kv td.rval{text-align:right;font-weight:bold;width:30%;}
+    table.rpt.kv td.runit{text-align:left;color:#666;width:15%;}
+    td.rsub{background:#f0f3f7;font-weight:bold;text-align:left !important;color:#0b2e6b;font-size:10.5px;letter-spacing:.04em;}
+    td.rnote{text-align:left !important;font-style:italic;color:#555;font-size:9.5px;background:#fafafa;}
+    .rformula{background:#f7f9fb;border:1px solid #cdd6e0;border-left:3px solid #0b2e6b;padding:6px 9px;margin:4px 0 12px;font-size:10px;line-height:1.6;}
+    .check{font-weight:bold;} .check.ok{color:#0a7d3c;} .check.bad{color:#c0241c;}
+    .rfoot{margin-top:22px;border-top:1px solid #999;padding-top:8px;font-size:9.5px;color:#666;}
+    @media print{ h1.rtab{page-break-before:auto;} }
+  `;
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>Storage Tank Design - API 650 Report</title><style>${css}</style></head>
+    <body>
+      <div class="rhead">
+        <h1>Storage Tank Design — API 650</h1>
+        <div class="meta">${meta}</div>
+        <div class="date">Design code: ${S.code||"API-650"} &nbsp;|&nbsp; Tank type: ${S.tankType||""} &nbsp;|&nbsp; Generated: ${now.toLocaleString()}</div>
+      </div>
+      ${buildReportBody()}
+      <div class="rfoot">Calculations follow API-650 (one-foot method §5.6, plate provisions §5.4–5.5, wind §5.11, seismic Annex E, anchorage §5.12 / Table 5.20). For preliminary engineering use — verify against the controlling edition of API-650 and project specifications before fabrication.</div>
+    </body></html>`;
+}
+
+function exportWord(){
+  try{
+    const html=reportDocument();
+    const blob=new Blob(['\ufeff'+html], {type:"application/msword"});
+    const fn=`Storage_Tank_Design_API650_${(S.jobNo||"report").replace(/[^\w-]/g,"")}.doc`;
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download=fn;
+    document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    flashBtn($("wordBtn"),"✓ Word");
+  }catch(e){ alert("Could not export Word: "+e.message); }
+}
+
+function exportPDF(){
+  try{
+    const html=reportDocument();
+    const w=window.open("","_blank");
+    if(!w){ alert("Pop-up blocked. Allow pop-ups for this page to export PDF, or use the Word export."); return; }
+    w.document.open(); w.document.write(html); w.document.close();
+    // give the new window a moment to render fonts/layout, then invoke print
+    const go=()=>{ try{ w.focus(); w.print(); }catch(_){ } };
+    if(w.document.readyState==="complete") setTimeout(go,400); else w.onload=()=>setTimeout(go,400);
+    flashBtn($("pdfBtn"),"✓ PDF");
+  }catch(e){ alert("Could not export PDF: "+e.message); }
+}
+
+/* ===================== SAVE / LOAD ===================== */
+const STORE_KEY="api650_tank_inputs";
+function flashBtn(btn,msg){ const o=btn.textContent; btn.textContent=msg; setTimeout(()=>btn.textContent=o,1400); }
+function saveInputs(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(S));
+    flashBtn($("saveBtn"),"✓ Saved");
+  }catch(e){ alert("Could not save inputs: "+e.message); }
+}
+function loadInputs(silent){
+  try{
+    const raw=localStorage.getItem(STORE_KEY);
+    if(!raw){ if(!silent) alert("No saved inputs found."); return false; }
+    const data=JSON.parse(raw);
+    // merge into a fresh default to stay safe against missing keys
+    S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), data);
+    init();
+    if(!silent) flashBtn($("loadBtn"),"✓ Loaded");
+    return true;
+  }catch(e){ if(!silent) alert("Could not load inputs: "+e.message); return false; }
+}
+
+/* ===================== INIT ===================== */
+/* ===================== TAB SWITCHING ===================== */
+function switchTab(name){
+  document.querySelectorAll(".tab-panel").forEach(p=>p.classList.toggle("active", p.id==="tab-"+name));
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active", b.dataset.tab===name));
+  window.scrollTo({top:0,behavior:"instant"in window?"instant":"auto"});
+}
+function bindTabs(){
+  document.querySelectorAll(".tab-btn").forEach(b=>{
+    b.onclick=()=>switchTab(b.dataset.tab);
+  });
+}
+function init(){ buildInputs(); buildShellTable(); compute(); bindTabs(); }
+$("resetBtn").onclick=()=>{ S=JSON.parse(JSON.stringify(DEFAULTS)); init(); };
+$("printBtn").onclick=()=>window.print();
+$("saveBtn").onclick=saveInputs;
+$("loadBtn").onclick=()=>loadInputs(false);
+$("wordBtn").onclick=exportWord;
+$("pdfBtn").onclick=exportPDF;
+init();
+// auto-restore last saved inputs on open (if any)
+loadInputs(true);
+</script>
+</body>
+</html>
