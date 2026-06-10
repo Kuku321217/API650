@@ -5,106 +5,131 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Storage Tank Design-API 650</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Spline+Sans+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
+  /* Engineering calculation-sheet palette: paper-white sheet, slate ink,
+     drafting-blue primary, oxide-red for non-conformance. No glow, no neon. */
   :root{
-    --bg:#0d1117;
-    --panel:#161b22;
-    --panel-2:#1c232c;
-    --line:#2a323d;
-    --ink:#e6edf3;
-    --muted:#8b97a6;
-    --accent:#ffb000;
-    --accent-2:#34d399;
-    --danger:#ff5d5d;
-    --blue:#58a6ff;
-    --shadow:0 10px 40px rgba(0,0,0,.45);
+    --bg:#e9ebee;          /* desk / behind-sheet */
+    --panel:#ffffff;       /* the calc sheet */
+    --panel-2:#f5f6f8;     /* input wells / zebra */
+    --line:#c9ced6;        /* rules */
+    --line-strong:#8a929e; /* heavy rules */
+    --ink:#1d242c;         /* primary text */
+    --muted:#5d6772;       /* secondary text */
+    --accent:#1f4e79;      /* drafting blue (headings, primary) */
+    --accent-2:#2f6f4f;    /* conformance green */
+    --danger:#9c2b2b;      /* oxide red (non-conformance) */
+    --blue:#1f4e79;        /* heading blue */
+    --input-ink:#0b3d62;   /* editable field text */
+    --input-fill:#fff7df;  /* editable cell fill (data-entry tint) */
+    --input-fill-2:#fff2c9;/* editable cell hover/focus fill */
+    --input-border:#d8b765;/* editable cell border */
+    --shadow:0 1px 2px rgba(29,36,44,.10), 0 6px 18px rgba(29,36,44,.06);
   }
   *{box-sizing:border-box;}
   body{
-    margin:0;background:
-      radial-gradient(1200px 600px at 80% -10%, rgba(255,176,0,.08), transparent 60%),
-      radial-gradient(900px 500px at -10% 110%, rgba(52,211,153,.07), transparent 60%),
-      var(--bg);
+    margin:0;background:var(--bg);
     color:var(--ink);
-    font-family:'Archivo',sans-serif;
+    font-family:'IBM Plex Sans',Arial,sans-serif;
     -webkit-font-smoothing:antialiased;
     line-height:1.45;
   }
-  .wrap{max-width:1360px;margin:0 auto;padding:28px 22px 80px;}
+  .wrap{max-width:1320px;margin:0 auto;padding:24px 22px 70px;}
 
   header.top{
-    display:flex;align-items:flex-end;justify-content:space-between;
-    gap:20px;flex-wrap:wrap;border-bottom:1px solid var(--line);
-    padding-bottom:20px;margin-bottom:26px;
+    display:flex;align-items:stretch;justify-content:space-between;
+    gap:18px;flex-wrap:wrap;
+    background:var(--panel);border:1px solid var(--line-strong);
+    border-radius:3px;box-shadow:var(--shadow);
+    padding:0;margin-bottom:18px;overflow:hidden;
   }
-  .brand{display:flex;flex-direction:column;gap:6px;}
+  .brand{display:flex;flex-direction:column;gap:3px;padding:14px 20px;
+    border-right:1px solid var(--line);justify-content:center;}
   .brand .kick{
-    font-family:'Spline Sans Mono',monospace;font-size:12px;letter-spacing:.32em;
-    text-transform:uppercase;color:var(--accent);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);font-weight:500;
   }
   .brand h1{
-    margin:0;font-size:clamp(26px,4vw,42px);font-weight:900;letter-spacing:-.02em;
-    line-height:.98;
+    margin:0;font-size:clamp(19px,2.4vw,26px);font-weight:700;letter-spacing:-.01em;
+    line-height:1.05;color:var(--ink);
   }
-  .brand h1 span{color:var(--muted);font-weight:600;}
-  .brand .sub{color:var(--muted);font-size:13.5px;max-width:560px;}
-  .top-actions{display:flex;gap:10px;flex-wrap:wrap;}
+  .brand h1 span{color:var(--accent);font-weight:600;}
+  .brand .sub{color:var(--muted);font-size:12.5px;max-width:560px;}
+  .top-actions{display:flex;gap:0;flex-wrap:wrap;align-items:stretch;}
   button.btn{
-    font-family:'Spline Sans Mono',monospace;font-size:12.5px;font-weight:600;
-    letter-spacing:.04em;cursor:pointer;border:1px solid var(--line);
-    background:var(--panel-2);color:var(--ink);padding:11px 16px;border-radius:10px;
-    transition:.16s;text-transform:uppercase;
+    font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;font-weight:500;
+    letter-spacing:.01em;cursor:pointer;border:none;border-left:1px solid var(--line);
+    background:var(--panel);color:var(--ink);padding:0 18px;border-radius:0;
+    transition:background .12s,color .12s;
   }
-  button.btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);}
-  button.btn.primary{background:var(--accent);color:#1a1300;border-color:var(--accent);}
-  button.btn.primary:hover{filter:brightness(1.08);color:#1a1300;}
+  button.btn:hover{background:var(--panel-2);color:var(--accent);}
+  button.btn.primary{background:var(--accent);color:#fff;}
+  button.btn.primary:hover{background:#163a5a;color:#fff;}
 
-  .grid{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start;}
+  .legend{
+    display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;
+    margin:0 0 16px;padding:8px 14px;
+    background:var(--panel);border:1px solid var(--line);border-radius:3px;
+    font-family:'IBM Plex Sans',sans-serif;font-size:11.5px;color:var(--muted);
+  }
+  .legend .lg-item{display:inline-flex;align-items:center;gap:7px;}
+  .legend .lg-swatch{
+    width:13px;height:13px;border-radius:2px;border:1px solid var(--line-strong);
+    display:inline-block;flex:0 0 auto;
+  }
+  .legend .sw-input{background:var(--input-fill);border-color:var(--input-border);}
+  .legend .sw-calc{background:#fff;border-color:var(--line);}
+  .legend .sw-ok{background:#eaf3ee;border-color:#bcd9c8;}
+  .legend .sw-bad{background:#f6e9e9;border-color:#e0bdbd;}
+
+  .grid{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start;}
   @media(max-width:980px){.grid{grid-template-columns:1fr;}}
 
   .card{
-    background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    background:var(--panel);border:1px solid var(--line-strong);border-radius:3px;
     box-shadow:var(--shadow);overflow:hidden;
   }
   .card h2{
-    margin:0;font-size:13px;letter-spacing:.14em;text-transform:uppercase;
-    font-family:'Spline Sans Mono',monospace;color:var(--accent);
-    padding:16px 18px;border-bottom:1px solid var(--line);
-    background:linear-gradient(180deg,rgba(255,255,255,.02),transparent);
-    display:flex;align-items:center;gap:10px;
+    margin:0;font-size:13px;letter-spacing:.02em;text-transform:none;
+    font-family:'IBM Plex Sans',sans-serif;color:#fff;font-weight:600;
+    padding:9px 14px;border-bottom:1px solid var(--line-strong);
+    background:var(--accent);
+    display:flex;align-items:center;gap:9px;
   }
   .card h2 .num{
-    background:var(--accent);color:#1a1300;font-weight:800;border-radius:6px;
-    width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;
-    font-size:12px;
+    background:rgba(255,255,255,.18);color:#fff;font-weight:600;border-radius:2px;
+    font-family:'IBM Plex Mono',monospace;
+    min-width:24px;height:20px;padding:0 5px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:11px;
   }
-  .card .body{padding:16px 18px;}
+  .card .body{padding:14px 16px;}
 
-  .field{margin-bottom:13px;}
+  .field{margin-bottom:12px;}
   .field:last-child{margin-bottom:0;}
   .field label{
-    display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:500;
+    display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:500;
   }
   .field .input-row{display:flex;align-items:center;gap:8px;}
   .field input,.field select{
-    width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);
-    border-radius:9px;padding:9px 11px;font-family:'Spline Sans Mono',monospace;
-    font-size:13px;transition:.15s;font-weight:600;
+    width:100%;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);
+    border-radius:2px;padding:8px 10px;font-family:'IBM Plex Mono',monospace;
+    font-size:13px;transition:border-color .12s,box-shadow .12s,background .12s;font-weight:600;
   }
+  .field input:hover,.field select:hover{background:var(--input-fill-2);}
   .field input:focus,.field select:focus{
-    outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(88,166,255,.14);
+    outline:none;background:#fff;border-color:var(--accent);box-shadow:0 0 0 2px rgba(31,78,121,.20);
   }
   .field .unit{
-    font-family:'Spline Sans Mono',monospace;font-size:11.5px;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);
     flex:0 0 auto;min-width:42px;
   }
-  .field input[type=text]{font-family:'Archivo',sans-serif;}
+  .field input[type=text]{font-family:'IBM Plex Sans',sans-serif;}
 
   .section-label{
-    font-family:'Spline Sans Mono',monospace;font-size:11px;letter-spacing:.18em;
-    text-transform:uppercase;color:var(--muted);margin:18px 0 10px;
-    padding-top:14px;border-top:1px dashed var(--line);
+    font-family:'IBM Plex Sans',sans-serif;font-size:11px;letter-spacing:.06em;
+    text-transform:uppercase;color:var(--accent);font-weight:600;margin:16px 0 9px;
+    padding-top:12px;border-top:1px solid var(--line);
   }
   .section-label:first-child{border-top:none;padding-top:0;margin-top:0;}
 
@@ -117,124 +142,147 @@
   .field-grid .field label{
     font-size:11px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
-  .field-grid .field input,.field-grid .field select{padding:7px 9px;font-size:12.5px;}
+  .field-grid .field input,.field-grid .field select{padding:6px 9px;font-size:12.5px;}
   .field-grid .field .unit{min-width:36px;font-size:11px;}
 
   /* results */
-  .res-stack{display:flex;flex-direction:column;gap:22px;}
+  .res-stack{display:flex;flex-direction:column;gap:20px;}
   .summary-grid{
     display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;
     background:var(--line);
   }
-  .stat{background:var(--panel);padding:15px 16px;}
-  .stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;
-    font-family:'Spline Sans Mono',monospace;}
-  .stat .v{font-size:23px;font-weight:800;margin-top:4px;letter-spacing:-.01em;}
-  .stat .v small{font-size:12px;color:var(--muted);font-weight:500;margin-left:3px;}
+  .stat{background:var(--panel);padding:13px 15px;}
+  .stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;
+    font-family:'IBM Plex Sans',sans-serif;font-weight:500;}
+  .stat .v{font-size:22px;font-weight:600;margin-top:3px;letter-spacing:-.01em;
+    font-family:'IBM Plex Mono',monospace;color:var(--ink);}
+  .stat .v small{font-size:12px;color:var(--muted);font-weight:400;margin-left:3px;}
   .stat .v.accent{color:var(--accent);}
   .stat .v.green{color:var(--accent-2);}
-  .stat .v.blue{color:var(--blue);}
+  .stat .v.blue{color:var(--accent);}
 
   .tablewrap{overflow-x:auto;}
-  table{border-collapse:collapse;width:100%;font-family:'Spline Sans Mono',monospace;
+  table{border-collapse:collapse;width:100%;font-family:'IBM Plex Mono',monospace;
     font-size:12px;min-width:760px;}
   thead th{
-    text-align:right;padding:10px 9px;color:var(--muted);font-weight:600;
-    border-bottom:1px solid var(--line);white-space:nowrap;font-size:10.5px;
-    letter-spacing:.03em;position:sticky;top:0;background:var(--panel);
+    text-align:right;padding:9px 9px;color:#fff;font-weight:500;
+    border-bottom:1px solid var(--line-strong);white-space:nowrap;font-size:10.5px;
+    letter-spacing:.02em;position:sticky;top:0;background:var(--accent);
+    font-family:'IBM Plex Sans',sans-serif;
   }
   thead th:first-child,tbody td:first-child{text-align:center;}
   thead th.lcol{text-align:left;}
-  tbody td{padding:8px 9px;text-align:right;border-bottom:1px solid rgba(42,50,61,.55);
+  tbody td{padding:7px 9px;text-align:right;border-bottom:1px solid var(--line);
     white-space:nowrap;}
   tbody td.lcol{text-align:left;}
-  tbody tr:hover{background:rgba(255,255,255,.018);}
+  tbody tr:nth-child(even){background:var(--panel-2);}
+  tbody tr:hover{background:#eef3f8;}
   tbody td.adopt{color:var(--accent);font-weight:600;}
   tbody td.gov{font-weight:600;}
   tbody td input{
-    width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);
-    border-radius:6px;padding:5px 6px;font-family:'Spline Sans Mono',monospace;
+    width:62px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);
+    border-radius:2px;padding:5px 6px;font-family:'IBM Plex Mono',monospace;
     font-size:12px;text-align:right;font-weight:600;
   }
   tbody td input.matsel{width:128px;text-align:left;}
   tbody td select{
-    background:var(--panel-2);border:1px solid var(--line);color:var(--blue);
-    border-radius:6px;padding:5px 6px;font-family:'Spline Sans Mono',monospace;font-size:11.5px;
+    background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);
+    border-radius:2px;padding:5px 6px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;
     max-width:150px;font-weight:600;
   }
-  tbody td select:focus,tbody td input:focus{outline:none;border-color:var(--blue);}
-  tfoot td{padding:11px 9px;border-top:2px solid var(--line);font-weight:800;text-align:right;}
-  tfoot td.lcol{text-align:left;color:var(--accent);letter-spacing:.05em;}
+  tbody td input:hover,tbody td select:hover{background:var(--input-fill-2);}
+  tbody td select:focus,tbody td input:focus{outline:none;background:#fff;border-color:var(--accent);box-shadow:0 0 0 2px rgba(31,78,121,.20);}
+  tfoot td{padding:10px 9px;border-top:2px solid var(--line-strong);font-weight:700;text-align:right;
+    background:var(--panel-2);}
+  tfoot td.lcol{text-align:left;color:var(--accent);letter-spacing:.02em;}
   .muted-row td{color:var(--muted);}
 
   .check{
-    display:inline-flex;align-items:center;gap:7px;font-family:'Spline Sans Mono',monospace;
-    font-size:12px;padding:5px 11px;border-radius:999px;font-weight:600;
+    display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;padding:3px 9px;border-radius:2px;font-weight:600;
+    letter-spacing:.02em;border:1px solid transparent;
   }
-  .check.ok{background:rgba(52,211,153,.12);color:var(--accent-2);border:1px solid rgba(52,211,153,.3);}
-  .check.bad{background:rgba(255,93,93,.12);color:var(--danger);border:1px solid rgba(255,93,93,.3);}
+  .check.ok{background:#eaf3ee;color:var(--accent-2);border-color:#bcd9c8;}
+  .check.bad{background:#f6e9e9;color:var(--danger);border-color:#e0bdbd;}
 
   .kv{display:grid;grid-template-columns:1fr auto auto;gap:6px 14px;align-items:baseline;
-    font-family:'Spline Sans Mono',monospace;font-size:12.5px;}
-  .kv .lbl{color:var(--muted);}
-  .kv .val{text-align:right;font-weight:600;}
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+  .kv .lbl{color:var(--muted);font-family:'IBM Plex Sans',sans-serif;}
+  .kv .val{text-align:right;font-weight:600;color:var(--ink);}
   .kv .u{color:var(--muted);font-size:11px;min-width:38px;}
-  .kv .note{grid-column:1/-1;color:var(--muted);font-size:11px;font-style:italic;
-    padding:2px 0 8px;border-bottom:1px dashed var(--line);margin-bottom:6px;}
+  .kv .note{grid-column:1/-1;color:var(--muted);font-size:11px;font-style:normal;
+    font-family:'IBM Plex Sans',sans-serif;
+    padding:2px 0 8px;border-bottom:1px solid var(--line);margin-bottom:6px;}
+
+  /* dedicated 4-column grid for the wind height-band factor table */
+  .band-grid{display:grid;grid-template-columns:1fr 90px 90px 90px;gap:6px 12px;
+    align-items:center;font-family:'IBM Plex Mono',monospace;font-size:12.5px;
+    grid-column:1/-1;margin:2px 0 4px;}
+  .band-grid .bhdr{color:var(--muted);font-size:11px;text-align:center;font-weight:500;
+    font-family:'IBM Plex Sans',sans-serif;padding-bottom:2px;}
+  .band-grid .blbl{color:var(--blue);font-family:'IBM Plex Sans',sans-serif;font-weight:500;}
+  .band-grid .bcell{display:flex;justify-content:flex-end;}
+  .band-grid .bcell input{width:100%;}
 
   .formula{
-    font-family:'Spline Sans Mono',monospace;font-size:11px;color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);
     background:var(--panel-2);border:1px solid var(--line);border-left:3px solid var(--accent);
-    padding:10px 12px;border-radius:8px;margin-top:14px;line-height:1.7;
+    padding:10px 12px;border-radius:2px;margin-top:14px;line-height:1.7;
   }
   .formula b{color:var(--ink);}
-  footer.foot{margin-top:40px;color:var(--muted);font-size:11.5px;text-align:center;
-    font-family:'Spline Sans Mono',monospace;line-height:1.7;}
+  footer.foot{margin-top:36px;color:var(--muted);font-size:11.5px;text-align:center;
+    font-family:'IBM Plex Sans',sans-serif;line-height:1.7;}
+  #devCredit{
+    text-align:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;
+    padding:16px 12px 24px;border-top:1px solid var(--line);margin-top:8px;
+  }
+  @media print{ #devCredit{color:#000 !important;opacity:1 !important;display:block !important;} }
   .pill{display:inline-block;background:var(--panel-2);border:1px solid var(--line);
-    border-radius:6px;padding:2px 8px;font-size:11px;color:var(--blue);}
-  ::-webkit-scrollbar{height:10px;width:10px;}
-  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
-  ::-webkit-scrollbar-track{background:transparent;}
+    border-radius:2px;padding:2px 8px;font-size:11px;color:var(--accent);
+    font-family:'IBM Plex Mono',monospace;}
+  ::-webkit-scrollbar{height:11px;width:11px;}
+  ::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:0;}
+  ::-webkit-scrollbar-track{background:var(--panel-2);}
 
 
   /* ===================== TAB NAVIGATION ===================== */
   .tabs{
-    display:flex;gap:4px;flex-wrap:wrap;margin-bottom:26px;
-    border-bottom:1px solid var(--line);padding-bottom:0;
+    display:flex;gap:2px;flex-wrap:wrap;margin-bottom:18px;
+    border-bottom:2px solid var(--accent);padding-bottom:0;
     position:sticky;top:0;z-index:30;
-    background:linear-gradient(180deg,var(--bg) 60%,rgba(13,17,23,.85));
-    backdrop-filter:blur(6px);
+    background:var(--bg);
   }
   .tab-btn{
-    font-family:'Spline Sans Mono',monospace;font-size:12.5px;font-weight:600;
-    letter-spacing:.04em;cursor:pointer;border:1px solid transparent;border-bottom:none;
-    background:transparent;color:var(--muted);padding:12px 16px;border-radius:10px 10px 0 0;
-    transition:.16s;text-transform:uppercase;display:flex;align-items:center;gap:8px;
-    position:relative;top:1px;
+    font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;font-weight:500;
+    letter-spacing:0;cursor:pointer;border:1px solid var(--line);border-bottom:none;
+    background:var(--panel-2);color:var(--muted);padding:9px 14px;border-radius:3px 3px 0 0;
+    transition:background .12s,color .12s;display:flex;align-items:center;gap:7px;
+    position:relative;top:2px;
   }
   .tab-btn .tnum{
-    background:var(--panel-2);color:var(--muted);font-weight:800;border-radius:6px;
-    min-width:20px;height:20px;padding:0 5px;display:inline-flex;align-items:center;
-    justify-content:center;font-size:11px;transition:.16s;
+    background:var(--line);color:var(--muted);font-weight:600;border-radius:2px;
+    font-family:'IBM Plex Mono',monospace;
+    min-width:20px;height:18px;padding:0 5px;display:inline-flex;align-items:center;
+    justify-content:center;font-size:11px;transition:.12s;
   }
-  .tab-btn:hover{color:var(--ink);background:var(--panel);}
+  .tab-btn:hover{color:var(--ink);background:#fff;}
   .tab-btn.active{
-    color:var(--accent);background:var(--panel);
-    border-color:var(--line);border-bottom-color:var(--panel);
+    color:var(--accent);background:#fff;font-weight:600;
+    border-color:var(--accent);border-bottom-color:#fff;
   }
-  .tab-btn.active .tnum{background:var(--accent);color:#1a1300;}
+  .tab-btn.active .tnum{background:var(--accent);color:#fff;}
 
-  .tab-panel{display:none;animation:fadein .22s ease;}
+  .tab-panel{display:none;}
   .tab-panel.active{display:block;}
-  @keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
 
   /* layout helpers used inside panels */
-  .panel-grid{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start;}
+  .panel-grid{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start;}
   @media(max-width:980px){.panel-grid{grid-template-columns:1fr;}}
-  .stack{display:flex;flex-direction:column;gap:22px;}
-  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .stack{display:flex;flex-direction:column;gap:20px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
   @media(max-width:760px){.two-col{grid-template-columns:1fr;}}
-  .input-sticky{position:sticky;top:64px;}
+  .input-sticky{position:sticky;top:60px;}
   @media(max-width:980px){.input-sticky{position:static;}}
 
   @media print{
@@ -250,7 +298,7 @@
 
   <header class="top">
     <div class="brand">
-      <h1>Storage Tank Design<span>-API 650</span></h1>
+      <h1>Storage Tank Design: <span>API-650</span></h1>
     </div>
     <div class="top-actions">
       <button class="btn" id="resetBtn">Reset</button>
@@ -261,6 +309,13 @@
       <button class="btn primary" id="printBtn">Print / PDF</button>
     </div>
   </header>
+
+  <div class="legend">
+    <span class="lg-item"><span class="lg-swatch sw-input"></span> Editable input</span>
+    <span class="lg-item"><span class="lg-swatch sw-calc"></span> Calculated / read-only</span>
+    <span class="lg-item"><span class="lg-swatch sw-ok"></span> Conforms</span>
+    <span class="lg-item"><span class="lg-swatch sw-bad"></span> Does not conform</span>
+  </div>
 
   <!-- ============ TAB BAR ============ -->
   <nav class="tabs" id="tabBar">
@@ -676,6 +731,7 @@
     For preliminary engineering use — verify against the controlling edition of API-650 and project specifications before fabrication.
   </footer>
 </div>
+<div id="devCredit">Developed by: AY</div>
 
 <script>
 /* ===================== MATERIAL DATABASE (API-650 Table 5.2a, SI) ===================== */
@@ -747,6 +803,8 @@ const DEFAULTS = {
   D:30000, shellH:17000, Hd:16200, normalLvl:15000,
   designTemp:50, ambTemp:44, tmin:8, density:7850,
   LLL:1900,
+  // ---- Bottom slope (sheet "1_General information" row 45): rise/run, e.g. 1:100 ----
+  bottomSlopeRise:1, bottomSlopeRun:100,
   annMatl:"IS 2062 Gr. E250 Quality BR", annProvided:12, annCA:3, annUserWidth:1200,
   bottomToAnnularLap:60, minProjection:60, bottomThk:8,
   roofSlopeRise:1, roofSlopeRun:12, roofCA:1, roofThk:6,
@@ -862,9 +920,11 @@ const GEN_FIELDS = [
   ["D","Inside diameter of tank","num","mm"],
   ["shellH","Tank shell height","num","mm"],
   ["Hd","Max design liquid level (Hd)","num","mm"],
-  ["normalLvl","Max normal operating level","num","mm"],
+  ["normalLvl","Normal fill level","num","mm"],
   ["tmin","Minimum thickness","num","mm"],
   ["LLL","LLL / min operating level","num","mm"],
+  ["bottomSlopeRise","Bottom slope — rise","num",""],
+  ["bottomSlopeRun","Bottom slope — run","num",""],
   ["sec","Temperatures"],
   ["designTemp","Design temperature","num","°C"],
   ["ambTemp","Design ambient temperature","num","°C"],
@@ -965,7 +1025,7 @@ function renderSpectrumTable(force){
   // Editing a value must NOT rebuild, or the input being typed in would be destroyed.
   if(!force && _spRowCount===S.spectrum.length && host.querySelector("input[data-sr]")) return;
   _spRowCount = S.spectrum.length;
-  const spc="background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:5px;padding:4px 6px;font-family:'Spline Sans Mono';font-size:12.5px;text-align:right;font-weight:700;width:84px;";
+  const spc="background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';font-size:12.5px;text-align:right;font-weight:700;width:84px;";
   host.innerHTML = S.spectrum.map((r,i)=>`<tr>
       <td><input type="text" inputmode="decimal" step="any" data-sr="${i}" data-sc="0" value="${r[0]}" style="${spc}"></td>
       <td><input type="text" inputmode="decimal" step="any" data-sr="${i}" data-sc="1" value="${r[1]}" style="${spc}"></td>
@@ -1148,22 +1208,38 @@ function computeCore(){
     <td>${fmt(totCwt,0)}</td></tr>`;
 
   /* ===================== CAPACITY (1A) ===================== */
-  // Without seismic freeboard (#REF in workbook), modified dims = nominal.
-  const modD=S.D, modH=S.shellH, modLvl=S.normalLvl;
-  const netCap = PI*Math.pow(modD,2)*(modLvl - S.LLL)*1e-9/4;
-  const storedCap = PI*Math.pow(modD,2)*modLvl*1e-9/4;
-  const heightOK = S.normalLvl < S.shellH;
+  // Matches workbook sheet "1A_Capacity" (revised).
+  //   F3  LLL / minimum fill level            = General!C23
+  //   F4  Seismic freeboard (OLE)             = 7_Seismic!H101 = 0.42*D*Ac
+  //   F5  Normal fill level                   = General!C21
+  //   F6  Design liquid level (Hd)            = General!C20
+  //   I7  Bottom cone height                  = (D/2)*(slopeRise/slopeRun)
+  //   F7  Bottom cone volume (m³)             = PI*(D/2)^2 * I7 *1e-9 /3
+  //   F8  Net working capacity (m³)           = PI*D^2*(F5-F3)*1e-9/4
+  //   F9  Maximum capacity (m³)               = PI*D^2*(F6-F7)*1e-9/4   [F7 per workbook]
+  //   F11 Tank height check                   = (C20 + MAX(F4,1500)) < C19
+  const capLLL      = S.LLL;                                   // F3, mm
+  const capFreeboard= 0.42*S.D*S.seisAc;                       // F4 = 7_Seismic!H101, mm
+  const capNormLvl  = S.normalLvl;                             // F5, mm
+  const capDesignLvl= S.Hd;                                    // F6, mm
+  const coneHeight  = (S.D*0.5)*(S.bottomSlopeRise/S.bottomSlopeRun);   // I7, mm
+  const coneVol     = PI*Math.pow(S.D*0.5,2)*coneHeight*1e-9/3;         // F7, m³
+  const netCap      = PI*Math.pow(S.D,2)*(capNormLvl - capLLL)*1e-9/4;  // F8, m³
+  const maxCap      = PI*Math.pow(S.D,2)*(capDesignLvl - coneVol)*1e-9/4; // F9, m³ (workbook formula)
+  const heightOK    = (capDesignLvl + Math.max(capFreeboard, 1500)) < S.shellH;        // F11 = (C20 + MAX(F4,1500)) < C19
   $("capacity").innerHTML=`
-    <div class="lbl">LLL / min operating level</div><div class="val">${fmt(S.LLL,0)}</div><div class="u">mm</div>
-    <div class="lbl">Modified tank diameter</div><div class="val">${fmt(modD,0)}</div><div class="u">mm</div>
-    <div class="lbl">Modified tank height</div><div class="val">${fmt(modH,0)}</div><div class="u">mm</div>
-    <div class="lbl">Modified max operating level</div><div class="val">${fmt(modLvl,0)}</div><div class="u">mm</div>
+    <div class="lbl">LLL / minimum fill level</div><div class="val">${fmt(capLLL,0)}</div><div class="u">mm</div>
+    <div class="lbl">Seismic freeboard (OLE) = 0.42·D·A<sub>c</sub></div><div class="val">${fmt(capFreeboard,1)}</div><div class="u">mm</div>
+    <div class="lbl">Normal fill level</div><div class="val">${fmt(capNormLvl,0)}</div><div class="u">mm</div>
+    <div class="lbl">Design liquid level (H<sub>d</sub>)</div><div class="val">${fmt(capDesignLvl,0)}</div><div class="u">mm</div>
+    <div class="lbl">Bottom cone height</div><div class="val">${fmt(coneHeight,1)}</div><div class="u">mm</div>
+    <div class="lbl">Bottom cone volume</div><div class="val">${fmt(coneVol,2)}</div><div class="u">m³</div>
     <div class="lbl">Net working capacity</div><div class="val" style="color:var(--accent-2)">${fmt(netCap,1)}</div><div class="u">m³</div>
-    <div class="lbl">Stored capacity</div><div class="val" style="color:var(--blue)">${fmt(storedCap,1)}</div><div class="u">m³</div>
-    <div class="note">Modified dimensions equal nominal; seismic freeboard is reported on the Seismic Design tab (0.42·D·A<sub>c</sub>) and can be deducted manually if a freeboard-governed level is required.</div>
+    <div class="lbl">Maximum capacity</div><div class="val" style="color:var(--blue)">${fmt(maxCap,1)}</div><div class="u">m³</div>
+    <div class="note">Net working capacity = π·D²·(normal level − LLL)/4. Maximum capacity = π·D²·(H<sub>d</sub> − bottom-cone volume)/4 per workbook. Height check requires H<sub>d</sub> + max(seismic freeboard, 1500 mm) &lt; shell height.</div>
     <div class="lbl">Tank height check</div>
     <div class="val" style="grid-column:2/-1;text-align:left;">
-      <span class="check ${heightOK?'ok':'bad'}">${heightOK?'✓ TANK HEIGHT IS OK':'✗ TANK HEIGHT IS NOT OK'}</span></div>`;
+      <span class="check ${heightOK?'ok':'bad'}">${heightOK?'TANK HEIGHT IS OK':'TANK HEIGHT IS NOT OK'}</span></div>`;
 
   /* ===================== INSULATION DETAIL (1.4) ===================== */
   // Surface areas from nominal geometry (mm -> m). Shell = cylinder lateral area at mean insulation radius.
@@ -1207,7 +1283,7 @@ function computeCore(){
   const annOpts = MATERIALS.map(m=>`<option value="${m[0]}"${m[0]===S.annMatl?' selected':''}>${m[0]}</option>`).join("");
   $("annular").innerHTML=`
     <div class="lbl">MOC of annular plate</div>
-      <div class="val" style="grid-column:2/-1;text-align:left;"><select id="annMatSel" style="width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:6px 7px;font-family:'Spline Sans Mono';font-size:11.5px;font-weight:600;">${annOpts}</select></div>
+      <div class="val" style="grid-column:2/-1;text-align:left;"><select id="annMatSel" style="width:100%;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:6px 7px;font-family:'IBM Plex Mono';font-size:11.5px;font-weight:600;">${annOpts}</select></div>
     <div class="lbl">Yield stress (auto)</div><div class="val">${annY!=null?fmt(annY,0):'—'}</div><div class="u">MPa</div>
     <div class="lbl">Allowable S<sub>d</sub> (auto)</div><div class="val">${annSd!=null?fmt(annSd):'—'}</div><div class="u">MPa</div>
     <div class="lbl">Allowable S<sub>t</sub> (auto)</div><div class="val">${annSt!=null?fmt(annSt):'—'}</div><div class="u">MPa</div>
@@ -1216,16 +1292,16 @@ function computeCore(){
     <div class="lbl">Stress, 1st course (hydrotest)</div><div class="val">${stressTest!=null?fmt(stressTest):'—'}</div><div class="u">MPa</div>
     <div class="lbl">Min. thk. required (Tbl 5.1a)</div><div class="val">${fmt(annReqMin,2)}</div><div class="u">mm</div>
     <div class="lbl">Provided annular thickness</div>
-      <div class="val"><input id="annProv" type="text" inputmode="decimal" step="any" value="${annProvided}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+      <div class="val"><input id="annProv" type="text" inputmode="decimal" step="any" value="${annProvided}" style="width:62px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
     <div class="lbl">Corrosion allowance (annular)</div>
-      <div class="val"><input id="annCA" type="text" inputmode="decimal" step="any" value="${S.annCA}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+      <div class="val"><input id="annCA" type="text" inputmode="decimal" step="any" value="${S.annCA}" style="width:62px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
     <div class="lbl">Net (corroded) annular thickness</div><div class="val" style="color:var(--blue)">${fmt(annProvided-S.annCA,2)}</div><div class="u">mm</div>
     <div class="lbl">Radial width (shell→lap, calc)</div><div class="val">${fmt(wRadial,1)}</div><div class="u">mm</div>
     <div class="lbl">Max radial width (0.035·D)</div><div class="val">${fmt(wMax,1)}</div><div class="u">mm</div>
     <div class="lbl">User radial width</div>
-      <div class="val"><input id="annUser" type="text" inputmode="decimal" step="any" value="${S.annUserWidth}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+      <div class="val"><input id="annUser" type="text" inputmode="decimal" step="any" value="${S.annUserWidth}" style="width:62px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
     <div class="lbl">Required width (Cl. 5.5.2)</div><div class="val" style="color:var(--accent)">${fmt(reqWidth,1)}</div><div class="u">mm</div>
-    <div class="note">Provided width ${S.annUserWidth} mm ${S.annUserWidth>=reqWidth?'✓ adequate':'✗ less than required'} vs required ${fmt(reqWidth,0)} mm.</div>`;
+    <div class="note">Provided width ${S.annUserWidth} mm ${S.annUserWidth>=reqWidth?'adequate':'less than required'} vs required ${fmt(reqWidth,0)} mm.</div>`;
   $("annMatSel").addEventListener("change",e=>{S.annMatl=e.target.value;compute();});
   $("annProv").addEventListener("input",e=>{S.annProvided=parseFloat(e.target.value);compute();});
   $("annCA").addEventListener("input",e=>{S.annCA=parseFloat(e.target.value);compute();});
@@ -1239,11 +1315,11 @@ function computeCore(){
   const wBottom  = ( PI*Math.pow(Dinner,2)*S.density*1e-9*S.bottomThk )/4 * 1.10;
   $("bottom").innerHTML=`
     <div class="lbl">Bottom plate thickness</div>
-      <div class="val"><input id="botThk" type="text" inputmode="decimal" step="any" value="${S.bottomThk}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;"></div><div class="u">mm</div>
+      <div class="val"><input id="botThk" type="text" inputmode="decimal" step="any" value="${S.bottomThk}" style="width:62px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;"></div><div class="u">mm</div>
     <div class="lbl">Bottom-to-annular lap</div>
-      <div class="val"><input id="lap" type="text" inputmode="decimal" step="any" value="${S.bottomToAnnularLap}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+      <div class="val"><input id="lap" type="text" inputmode="decimal" step="any" value="${S.bottomToAnnularLap}" style="width:62px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
     <div class="lbl">Min. projection outside shell</div>
-      <div class="val"><input id="proj" type="text" inputmode="decimal" step="any" value="${S.minProjection}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+      <div class="val"><input id="proj" type="text" inputmode="decimal" step="any" value="${S.minProjection}" style="width:62px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
     <div class="note">Annular ring O.D. ${fmt(Douter,0)} mm · I.D. ${fmt(Dinner,0)} mm</div>
     <div class="lbl">Weight of annular plate (Increase by 10%)</div><div class="val" style="color:var(--accent-2)">${fmt(wAnnular,0)}</div><div class="u">kg</div>
     <div class="lbl">Weight of bottom plate (Increase by 10%)</div><div class="val" style="color:var(--accent-2)">${fmt(wBottom,0)}</div><div class="u">kg</div>
@@ -1267,15 +1343,15 @@ function computeCore(){
   $("roof").innerHTML=`
     <div class="lbl">Slope of cone roof (rise : run)</div>
       <div class="val" style="grid-column:2/-1;text-align:left;display:flex;align-items:center;gap:6px;">
-        <input id="roofRise" type="text" inputmode="decimal" step="any" value="${rise}" style="width:54px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;">
+        <input id="roofRise" type="text" inputmode="decimal" step="any" value="${rise}" style="width:54px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:600;">
         <span style="color:var(--muted);">:</span>
-        <input id="roofRun" type="text" inputmode="decimal" step="any" value="${run}" style="width:54px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div>
+        <input id="roofRun" type="text" inputmode="decimal" step="any" value="${run}" style="width:54px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:600;"></div>
     <div class="lbl">tan (θ)</div><div class="val">${fmt(tanTh,4)}</div><div class="u"></div>
     <div class="lbl">sin (θ)</div><div class="val">${fmt(sinTh,4)}</div><div class="u"></div>
     <div class="lbl">Corrosion allowance for roof</div>
-      <div class="val"><input id="roofCA" type="text" inputmode="decimal" step="any" value="${S.roofCA}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+      <div class="val"><input id="roofCA" type="text" inputmode="decimal" step="any" value="${S.roofCA}" style="width:62px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
     <div class="lbl">Roof plate thickness</div>
-      <div class="val"><input id="roofThk" type="text" inputmode="decimal" step="any" value="${S.roofThk}" style="width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
+      <div class="val"><input id="roofThk" type="text" inputmode="decimal" step="any" value="${S.roofThk}" style="width:62px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:600;"></div><div class="u">mm</div>
     <div class="note">Roof radius term D/2 + 2·t<sub>adopt,1</sub> = ${fmt(roofR_m*1000,0)} mm · slope-length factor ${fmt(slopeFactor,4)}</div>
     <div class="lbl">Weight of roof plate (+10% overlap)</div><div class="val" style="color:var(--accent-2)">${fmt(wRoof,0)}</div><div class="u">kg</div>
     <div class="lbl">Corroded weight of roof plate (+10% overlap)</div><div class="val" style="color:var(--blue)">${fmt(wRoofC,0)}</div><div class="u">kg</div>`;
@@ -1327,7 +1403,7 @@ function computeCore(){
     <div class="lbl">Number of intermediate stiffeners</div><div class="val" style="color:var(--accent-2)">${nStiff}</div><div class="u"></div>
     <div class="lbl" id="actStiffLbl">Actual no. of stiffeners (per user locations)</div><div class="val" id="actStiffVal"></div><div class="u" id="actStiffUnit"></div>
     <div class="lbl">Spacing of stiffeners (calculated)</div><div class="val">${fmt(stiffSpacing,3)}</div><div class="u">m</div>
-    <div class="lbl" style="color:var(--blue)">USER INPUT for spacing of stiffeners</div><div class="val"><input id="stiffSpacingUserIn" type="text" inputmode="decimal" step="any" value="${stiffSpacingUser}" style="width:80px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';font-size:13px;text-align:right;font-weight:700;"></div><div class="u">m</div>`;
+    <div class="lbl" style="color:var(--blue)">USER INPUT for spacing of stiffeners</div><div class="val"><input id="stiffSpacingUserIn" type="text" inputmode="decimal" step="any" value="${stiffSpacingUser}" style="width:80px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';font-size:13px;text-align:right;font-weight:700;"></div><div class="u">m</div>`;
   const ssIn=$("stiffSpacingUserIn");
   if(ssIn){ ssIn.addEventListener("change",e=>{ S.stiffSpacingUser=parseFloat(e.target.value); compute(); }); }
 
@@ -1413,7 +1489,7 @@ function computeCore(){
     totStiffWt += r.wt;
     const st=S.stiffeners[i];
     const tr=document.createElement("tr");
-    const numIn=(key,val)=>`<input type="text" inputmode="decimal" step="any" data-si="${i}" data-k="${key}" value="${val}" style="width:70px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:5px 7px;font-family:'Spline Sans Mono';font-size:13px;text-align:right;font-weight:600;">`;
+    const numIn=(key,val)=>`<input type="text" inputmode="decimal" step="any" data-si="${i}" data-k="${key}" value="${val}" style="width:70px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:5px 7px;font-family:'IBM Plex Mono';font-size:13px;text-align:right;font-weight:600;">`;
     tr.innerHTML=`<td>${i+1}</td>
       <td style="color:var(--accent-2)">${fmt(r.autoBottom,2)}</td>
       <td>${numIn('loc', st.loc!=null&&!isNaN(st.loc)?st.loc:Math.round(r.autoTop))}</td>
@@ -1461,7 +1537,7 @@ function computeCore(){
   const tFl  = Math.PI*(Dext+tK*1e-3)*tL*tM*1e-6*S.density;
   const IzReqOK = ts.IzReq!=null && !isNaN(ts.IzReq);
   const tOK = IzReqOK ? (tIprov>=ts.IzReq) : null;
-  const tNum=(key,val)=>`<input type="text" inputmode="decimal" step="any" id="ts_${key}" value="${val}" style="width:64px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';font-size:11.5px;text-align:right;font-weight:600;">`;
+  const tNum=(key,val)=>`<input type="text" inputmode="decimal" step="any" id="ts_${key}" value="${val}" style="width:64px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';font-size:11.5px;text-align:right;font-weight:600;">`;
   $("topstiff").innerHTML=`
     <div class="lbl">Q = P<sub>d</sub>·H/4</div><div class="val">${fmt(Q,1)}</div><div class="u">N/m</div>
     <div class="lbl">Corresponding shell thickness</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('shellT',tH)}</div>
@@ -1523,11 +1599,11 @@ function computeCore(){
   const crRingWeight = (crDetailMsg.indexOf("Provide Compression ring")===0)
         ? crAddReq*PI*S.D*1e-9*S.density
         : crCurbArea*PI*S.D*1e-9*S.density;                                       // Kg
-  const crInputStyle = "width:62px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;";
+  const crInputStyle = "width:62px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:700;";
   const crMocOpts = MATERIALS.map(m=>`<option value="${m[0]}"${m[0]===S.crMOC?' selected':''}>${m[0]}</option>`).join("");
   $("compReqAvail").innerHTML=`
     <div class="lbl" style="color:var(--blue)">Roof MOC</div>
-      <div class="val" style="grid-column:2/-1;text-align:left;"><select id="crMocSel" style="width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:6px 7px;font-family:'Spline Sans Mono';font-size:11.5px;font-weight:700;">${crMocOpts}</select></div>
+      <div class="val" style="grid-column:2/-1;text-align:left;"><select id="crMocSel" style="width:100%;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:6px 7px;font-family:'IBM Plex Mono';font-size:11.5px;font-weight:700;">${crMocOpts}</select></div>
     <div class="lbl">Yield strength (auto)</div><div class="val">${crY!=null?fmt(crY,0):'—'}</div><div class="u">MPa</div>
     <div class="lbl">sin (θ) (from roof slope)</div><div class="val">${fmt(crSin,5)}</div><div class="u"></div>
     <div class="lbl">Compression area required</div><div class="val" style="color:var(--accent)">${fmt(crAreaReq,1)}</div><div class="u">mm²</div>
@@ -1572,7 +1648,7 @@ function computeCore(){
   // Roof frangibility (D37): DLs/(2*pi*Fy*tanTheta)*9.81, DLs = shell+stiff+roof struct+shell ins+comp ring
   const crFrangDLs = totWt + totStiffWt + S.crRoofStructWt + shellInsWt + crRingWeight; // kg
   const crFrangArea = (crY && crTan) ? (crFrangDLs/(2*PI*crY*crTan))*9.81 : 0;          // D37 (D4=Fy, S83=tanθ)
-  const flag=ok=>`<span class="check ${ok?'ok':'bad'}">${ok?'✓ adequate':'✗ insufficient'}</span>`;
+  const flag=ok=>`<span class="check ${ok?'ok':'bad'}">${ok?'adequate':'insufficient'}</span>`;
   $("compResult").innerHTML=`
     <div class="lbl">Min. additional area required</div><div class="val" style="color:var(--accent)">${fmt(crReqMin,1)}</div><div class="u">mm²</div>
     <div class="lbl">Detail-h vs required</div><div class="val" style="grid-column:2/-1;text-align:left;">${fmt(crDetailH,0)} mm² &nbsp; ${flag(detH_ok)}</div>
@@ -1662,15 +1738,15 @@ function computeCore(){
   const wl035D = 0.035*S.D*1e-3;                         // J71 (m)
   const wlMinAnn = Math.max(0.45, Math.min(wlLb, wl035D)); // J72 (m)
 
-  const wlInStyle = "width:74px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;";
+  const wlInStyle = "width:74px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:700;";
   const wlIn=(key,val)=>`<input type="text" inputmode="decimal" step="any" id="wl_${key}" value="${val}" style="${wlInStyle}">`;
-  const wlBandStyle = "width:100%;max-width:90px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;";
+  const wlBandStyle = "width:100%;max-width:90px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:700;";
   const wlBandIn=(key)=>`<input type="text" inputmode="decimal" step="any" id="wl_${key}" value="${S[key]}" style="${wlBandStyle}">`;
   const wlBandRow=(label,k10,k15,k20)=>`
-    <div class="lbl" style="color:var(--blue)">${label}</div>
-    <div class="val">${wlBandIn(k10)}</div>
-    <div class="val">${wlBandIn(k15)}</div>
-    <div class="val">${wlBandIn(k20)}</div>`;
+    <div class="blbl">${label}</div>
+    <div class="bcell">${wlBandIn(k10)}</div>
+    <div class="bcell">${wlBandIn(k15)}</div>
+    <div class="bcell">${wlBandIn(k20)}</div>`;
   $("wlInputs").innerHTML=`
     <div class="lbl">MOC of annular plate (from §5.5)</div><div class="val" style="grid-column:2/-1;text-align:left;font-size:11px;">${S.annMatl}</div>
     <div class="lbl">Yield stress of bottom plate (auto)</div><div class="val">${wlYield!=null?fmt(wlYield,0):'—'}</div><div class="u">MPa</div>
@@ -1680,10 +1756,11 @@ function computeCore(){
     <div class="lbl" style="color:var(--blue)">Wind velocity</div><div class="val">${wlIn('wlWindVel',wlV)}</div><div class="u">m/s</div>
     <div class="lbl" style="color:var(--blue)">Tank height</div><div class="val">${wlIn('wlTankHeight',wlH)}</div><div class="u">m</div>
     <div class="note">Wind factors per height band (blue = editable). Band-15 active only if H&gt;10 m; band-20 only if H&gt;15 m:</div>
-    <div class="lbl" style="color:var(--muted);font-size:11px;">Factor</div>
-    <div class="val" style="color:var(--muted);font-size:11px;text-align:center;">≤10 m</div>
-    <div class="val" style="color:var(--muted);font-size:11px;text-align:center;">≤15 m</div>
-    <div class="val" style="color:var(--muted);font-size:11px;text-align:center;">≤20 m</div>
+    <div class="band-grid">
+    <div class="bhdr" style="text-align:left;">Factor</div>
+    <div class="bhdr">≤10 m</div>
+    <div class="bhdr">≤15 m</div>
+    <div class="bhdr">≤20 m</div>
     ${wlBandRow('K<sub>1</sub> (probability/risk)','wlK1_10','wlK1_15','wlK1_20')}
     ${wlBandRow('K<sub>2</sub> (terrain/height)','wlK2_10','wlK2_15','wlK2_20')}
     ${wlBandRow('K<sub>3</sub> (topographic)','wlK3_10','wlK3_15','wlK3_20')}
@@ -1692,6 +1769,7 @@ function computeCore(){
     ${wlBandRow('K<sub>a</sub> (area averaging)','wlKa_10','wlKa_15','wlKa_20')}
     ${wlBandRow('K<sub>c</sub> (combination)','wlKc_10','wlKc_15','wlKc_20')}
     ${wlBandRow('Contingency factor','wlCont_10','wlCont_15','wlCont_20')}
+    </div>
     <div class="note">Design wind pressure P<sub>d</sub> for three height bands:</div>
     <div class="lbl">Design wind velocity — ≤10 m</div><div class="val">${fmt(b10.Vd,3)}</div><div class="u">m/s</div>
     <div class="lbl">Design wind velocity — ≤15 m</div><div class="val">${fmt(b15.Vd,3)}</div><div class="u">m/s</div>
@@ -1712,12 +1790,12 @@ function computeCore(){
     <div class="lbl">Total moment at tank bottom</div><div class="val">${fmt(wlMtot,1)}</div><div class="u">kg.m</div>
     <div class="lbl">Moment due to wind, +4% margin (M<sub>wind</sub>)</div><div class="val" style="color:var(--blue)">${fmt(wlMwind,1)}</div><div class="u">kg.m</div>`;
 
-  const wlSelfStyle = "width:96px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;";
+  const wlSelfStyle = "width:96px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:700;";
   const condRow=(n,name,L,Ltxt,R,Rtxt,ok)=>`
     <div class="lbl" style="grid-column:1/-1;text-align:left;color:var(--muted);padding-top:4px;"><b>(${n})</b> ${name}</div>
     <div class="lbl">${Ltxt}</div><div class="val">${fmt(L,3)}</div><div class="u">ton.m</div>
     <div class="lbl">${Rtxt}</div><div class="val">${fmt(R,3)}</div><div class="u">ton.m</div>
-    <div class="lbl">Result</div><div class="val" style="grid-column:2/-1;text-align:left;"><span class="check ${ok?'ok':'bad'}">${ok?'✓ SATISFIED':'✗ NOT SATISFIED'}</span></div>`;
+    <div class="lbl">Result</div><div class="val" style="grid-column:2/-1;text-align:left;"><span class="check ${ok?'ok':'bad'}">${ok?'SATISFIED':'NOT SATISFIED'}</span></div>`;
   $("wlStability").innerHTML=`
     <div class="lbl">Self weight of shell + appurtenances (auto)</div><div class="val" style="color:var(--accent-2)">${fmt(wlMDLs,0)}</div><div class="u">kg</div>
     <div class="lbl">Self weight of roof + insulation (auto)</div><div class="val" style="color:var(--accent-2)">${fmt(wlMDLr,0)}</div><div class="u">kg</div>
@@ -1733,7 +1811,7 @@ function computeCore(){
     ${condRow(2,'M<sub>w</sub> + F<sub>p</sub>·M<sub>pi</sub> &lt; (M<sub>DL</sub>+M<sub>F</sub>)/2 + M<sub>DLR</sub>',c2L,'M<sub>w</sub> + F<sub>p</sub>·M<sub>pi</sub>',c2R,'(M<sub>DL</sub>+M<sub>F</sub>)/2 + M<sub>DLR</sub>',c2OK)}
     ${condRow(3,'M<sub>ws</sub> + F<sub>p</sub>·M<sub>pi</sub> &lt; M<sub>DL</sub>/1.5 + M<sub>DLR</sub>',c3L,'M<sub>ws</sub> + F<sub>p</sub>·M<sub>pi</sub>',c3R,'M<sub>DL</sub>/1.5 + M<sub>DLR</sub>',c3OK)}
     <div class="lbl" style="grid-column:1/-1;text-align:left;padding-top:8px;font-size:13px;">Overall anchorage requirement</div>
-    <div class="val" style="grid-column:1/-1;text-align:left;"><span class="check ${wlAnchorOK?'ok':'bad'}" style="font-size:13px;padding:4px 12px;">${wlAnchorOK?'✓ ANCHORAGE IS NOT REQUIRED':'✗ ANCHORAGE IS REQUIRED'}</span></div>`;
+    <div class="val" style="grid-column:1/-1;text-align:left;"><span class="check ${wlAnchorOK?'ok':'bad'}" style="font-size:13px;padding:4px 12px;">${wlAnchorOK?'ANCHORAGE IS NOT REQUIRED':'ANCHORAGE IS REQUIRED'}</span></div>`;
 
   $("wlAnnular").innerHTML=`
     <div class="lbl">L<sub>b</sub> (Cl. 5.11.2.3.2)</div><div class="val">${fmt(wlLb,4)}</div><div class="u">m</div>
@@ -1889,7 +1967,7 @@ function computeCore(){
     <div class="lbl">Time period — convective (T<sub>c</sub>)</div><div class="val" style="color:var(--accent-2)">${fmt(seTc,4)}</div><div class="u">s</div>
     <div class="lbl">Horiz. accel. at T<sub>i</sub> (OBE/OLE)</div><div class="val">${fmt(specAt(seTi,1),4)}</div><div class="u">g</div>
     <div class="lbl">Horiz. accel. at T<sub>c</sub> (OBE/OLE)</div><div class="val">${fmt(specAt(seTc,1),4)}</div><div class="u">g</div>`;
-  const spIn=(k,v)=>`<input type="text" inputmode="decimal" step="any" id="sp_${k}" value="${v}" style="width:74px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;">`;
+  const spIn=(k,v)=>`<input type="text" inputmode="decimal" step="any" id="sp_${k}" value="${v}" style="width:74px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:700;">`;
   $("spAdjust").innerHTML=`
     <div class="lbl" style="color:var(--blue)">Adjustment factor — impulsive (OBE/OLE)</div><div class="val">${spIn('seisAdjImp',S.seisAdjImp)}</div><div class="u"></div>
     <div class="lbl" style="color:var(--blue)">Adjustment factor — convective (OBE/OLE)</div><div class="val">${spIn('seisAdjConv',S.seisAdjConv)}</div><div class="u"></div>
@@ -1905,7 +1983,7 @@ function computeCore(){
   });
 
   // ---- render Seismic tab ----
-  const seIn=(k,v)=>`<input type="text" inputmode="decimal" step="any" id="se_${k}" value="${v}" style="width:90px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;">`;
+  const seIn=(k,v)=>`<input type="text" inputmode="decimal" step="any" id="se_${k}" value="${v}" style="width:90px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:700;">`;
   $("seisInputs").innerHTML=`
     <div class="lbl">Max design product level (H)</div><div class="val">${fmt(seH,2)}</div><div class="u">m</div>
     <div class="lbl">Internal pressure (P<sub>i</sub>)</div><div class="val">${fmt(sePi,3)}</div><div class="u">kPa</div>
@@ -1942,7 +2020,7 @@ function computeCore(){
   $("seisShear").innerHTML=`
     <div class="lbl">Base shear V — OLE</div><div class="val" style="color:var(--accent)">${fmt(seV,0)}</div><div class="u">N</div>
     <div class="lbl">Ringwall moment M<sub>rw</sub> — OLE</div><div class="val" style="color:var(--accent)">${fmt(seMrw,0)}</div><div class="u">N·m</div>`;
-  const anchSel=`<select id="se_seisAnchor" style="width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:6px 7px;font-family:'Spline Sans Mono';font-size:11.5px;font-weight:600;">
+  const anchSel=`<select id="se_seisAnchor" style="width:100%;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:6px 7px;font-family:'IBM Plex Mono';font-size:11.5px;font-weight:600;">
     <option value="Self Anchored"${S.seisAnchor==="Self Anchored"?' selected':''}>Self Anchored</option>
     <option value="Mechanically Anchored"${S.seisAnchor==="Mechanically Anchored"?' selected':''}>Mechanically Anchored</option></select>`;
   $("seisComp").innerHTML=`
@@ -1955,7 +2033,7 @@ function computeCore(){
     <div class="lbl">Allowable compression (F<sub>c</sub>)</div><div class="val">${fmt(seFc,4)}</div><div class="u">MPa</div>
     <div class="lbl">Parameter A = G·H·D²/t<sub>s</sub>²</div><div class="val">${fmt(seA,2)}</div><div class="u"></div>
     <div class="lbl">Shell compression check</div>
-    <div class="val" style="grid-column:2/-1;text-align:left;"><span class="check ${seCompOK?'ok':'bad'}">${seCompOK?'✓ SAFE':'✗ NOT SAFE'}</span></div>`;
+    <div class="val" style="grid-column:2/-1;text-align:left;"><span class="check ${seCompOK?'ok':'bad'}">${seCompOK?'SAFE':'NOT SAFE'}</span></div>`;
   $("se_seisAnchor").addEventListener("change",e=>{S.seisAnchor=e.target.value;compute();});
   ["seisE","seisCi","seisXr","seisXs"].forEach(k=>{
     const el=$("se_"+k); if(el) el.addEventListener("input",e=>{S[k]=parseFloat(e.target.value);compute();});
@@ -2087,13 +2165,13 @@ function computeCore(){
   const required = (S.anchRequired||"").toUpperCase()==="YES";
 
   // ---- render Anchorage tab ----
-  const aIn=(k,v,w=90)=>`<input type="text" inputmode="decimal" step="any" id="anch_${k}" value="${v}" style="width:${w}px;background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:4px 6px;font-family:'Spline Sans Mono';text-align:right;font-weight:700;">`;
+  const aIn=(k,v,w=90)=>`<input type="text" inputmode="decimal" step="any" id="anch_${k}" value="${v}" style="width:${w}px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';text-align:right;font-weight:700;">`;
   const boltOpts = Object.keys(BOLT_AREA).map(b=>`<option value="${b}"${b===S.anchBoltDia?' selected':''}>${b}</option>`).join("");
-  const reqSel = `<select id="anch_anchRequired" style="background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:5px 8px;font-family:'Spline Sans Mono';font-weight:600;">
+  const reqSel = `<select id="anch_anchRequired" style="background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:5px 8px;font-family:'IBM Plex Mono';font-weight:600;">
     <option value="YES"${required?' selected':''}>YES</option><option value="NO"${!required?' selected':''}>NO</option></select>`;
   $("anchInputs").innerHTML=`
     <div class="lbl" style="color:var(--blue)">Anchorage required?</div><div class="val" style="grid-column:2/-1;text-align:left;">${reqSel}</div>
-    <div class="lbl" style="color:var(--blue)">Anchor bolt size</div><div class="val" style="grid-column:2/-1;text-align:left;"><select id="anch_anchBoltDia" style="background:var(--panel-2);border:1px solid var(--line);color:var(--blue);border-radius:6px;padding:5px 8px;font-family:'Spline Sans Mono';font-weight:600;">${boltOpts}</select></div>
+    <div class="lbl" style="color:var(--blue)">Anchor bolt size</div><div class="val" style="grid-column:2/-1;text-align:left;"><select id="anch_anchBoltDia" style="background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:5px 8px;font-family:'IBM Plex Mono';font-weight:600;">${boltOpts}</select></div>
     <div class="lbl" style="color:var(--blue)">Number of anchor bolts</div><div class="val">${aIn('anchNumBolts',S.anchNumBolts)}</div><div class="u"></div>
     <div class="lbl" style="color:var(--blue)">Anchor bolt circle dia (BCD)</div><div class="val">${aIn('anchBCD',S.anchBCD)}</div><div class="u">mm</div>
     <div class="lbl" style="color:var(--blue)">Bolt MOC yield stress</div><div class="val">${aIn('anchBoltYield',S.anchBoltYield)}</div><div class="u">MPa</div>
@@ -2126,7 +2204,7 @@ function computeCore(){
       <div class="lbl">Governing allowable stress</div><div class="val">${fmt(fAllow,1)}</div><div class="u">MPa</div>
       <div class="lbl">Minimum bolts required</div><div class="val" style="color:var(--accent-2)">${fmt(nReq,0)}</div><div class="u"></div>
       <div class="lbl">Bolts provided</div><div class="val">${fmt(nUsed,0)}</div><div class="u"></div>
-      <div class="lbl">Anchorage check</div><div class="val" style="grid-column:2/-1;text-align:left;"><span class="check ${anchOK?'ok':'bad'}">${anchOK?'✓ ADEQUATE':'✗ INCREASE BOLTS / SIZE'}</span></div>`;
+      <div class="lbl">Anchorage check</div><div class="val" style="grid-column:2/-1;text-align:left;"><span class="check ${anchOK?'ok':'bad'}">${anchOK?'ADEQUATE':'INCREASE BOLTS / SIZE'}</span></div>`;
   $("anch_anchRequired").addEventListener("change",e=>{S.anchRequired=e.target.value;compute();});
   $("anch_anchBoltDia").addEventListener("change",e=>{S.anchBoltDia=e.target.value;compute();});
   ["anchNumBolts","anchBCD","anchBoltYield"].forEach(k=>{
@@ -2140,7 +2218,7 @@ function computeCore(){
   $("summary").innerHTML=`
     <div class="stat"><div class="k">Tank Ø × Height</div><div class="v">${fmt(S.D/1000,1)}<small>×${fmt(S.shellH/1000,1)} m</small></div></div>
     <div class="stat"><div class="k">Net Working Cap.</div><div class="v green">${fmt(netCap,0)}<small>m³</small></div></div>
-    <div class="stat"><div class="k">Stored Cap.</div><div class="v blue">${fmt(storedCap,0)}<small>m³</small></div></div>
+    <div class="stat"><div class="k">Stored Cap.</div><div class="v blue">${fmt(maxCap,0)}<small>m³</small></div></div>
     <div class="stat"><div class="k">Max Req. Thk.</div><div class="v">${fmt(maxReq,1)}<small>mm</small></div></div>
     <div class="stat"><div class="k">Shell Weight</div><div class="v accent">${fmt(totWt,0)}<small>kg</small></div></div>
     <div class="stat"><div class="k">Roof Weight</div><div class="v accent">${fmt(wRoof,0)}<small>kg</small></div></div>
@@ -2153,11 +2231,11 @@ function computeCore(){
     <div class="stat"><div class="k">Seismic Base Shear (OLE)</div><div class="v accent">${fmt(seV/9.81/1000,0)}<small>tonne</small></div></div>
     <div class="stat"><div class="k">Ringwall Moment (OLE)</div><div class="v blue">${fmt(seMrw/9.81/1000,0)}<small>ton·m</small></div></div>
     <div class="stat"><div class="k">Shell Compression</div><div class="v" style="font-size:14px;margin-top:8px;">
-      <span class="check ${seCompOK?'ok':'bad'}">${seCompOK?'✓ SAFE':'✗ NOT SAFE'}</span></div></div>
+      <span class="check ${seCompOK?'ok':'bad'}">${seCompOK?'SAFE':'NOT SAFE'}</span></div></div>
     <div class="stat"><div class="k">Wind Anchorage</div><div class="v" style="font-size:14px;margin-top:8px;">
-      <span class="check ${wlAnchorOK?'ok':'bad'}">${wlAnchorOK?'✓ NOT REQUIRED':'✗ REQUIRED'}</span></div></div>
+      <span class="check ${wlAnchorOK?'ok':'bad'}">${wlAnchorOK?'NOT REQUIRED':'REQUIRED'}</span></div></div>
     <div class="stat"><div class="k">Thickness Check</div><div class="v ${anyUnder?'':''}" style="font-size:14px;margin-top:8px;">
-      <span class="check ${anyUnder?'bad':'ok'}">${anyUnder?'✗ COURSE UNDER-THICK':'✓ ALL ADEQUATE'}</span></div></div>`;
+      <span class="check ${anyUnder?'bad':'ok'}">${anyUnder?'COURSE UNDER-THICK':'ALL ADEQUATE'}</span></div></div>`;
 }
 
 /* ===================== REPORT EXPORT (Word / PDF) =====================
@@ -2331,6 +2409,7 @@ function reportDocument(){
       </div>
       ${buildReportBody()}
       <div class="rfoot">Calculations follow API-650 (one-foot method §5.6, plate provisions §5.4–5.5, wind §5.11, seismic Annex E, anchorage §5.12 / Table 5.20). For preliminary engineering use — verify against the controlling edition of API-650 and project specifications before fabrication.</div>
+      <div style="text-align:center;margin-top:14px;padding-top:10px;border-top:1px solid #999;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#333;font-weight:bold;">Developed by: AY</div>
     </body></html>`;
 }
 
@@ -2343,7 +2422,7 @@ function exportWord(){
     a.href=URL.createObjectURL(blob); a.download=fn;
     document.body.appendChild(a); a.click();
     setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-    flashBtn($("wordBtn"),"✓ Word");
+    flashBtn($("wordBtn"),"Word saved");
   }catch(e){ alert("Could not export Word: "+e.message); }
 }
 
@@ -2356,7 +2435,7 @@ function exportPDF(){
     // give the new window a moment to render fonts/layout, then invoke print
     const go=()=>{ try{ w.focus(); w.print(); }catch(_){ } };
     if(w.document.readyState==="complete") setTimeout(go,400); else w.onload=()=>setTimeout(go,400);
-    flashBtn($("pdfBtn"),"✓ PDF");
+    flashBtn($("pdfBtn"),"PDF saved");
   }catch(e){ alert("Could not export PDF: "+e.message); }
 }
 
@@ -2366,7 +2445,7 @@ function flashBtn(btn,msg){ const o=btn.textContent; btn.textContent=msg; setTim
 function saveInputs(){
   try{
     localStorage.setItem(STORE_KEY, JSON.stringify(S));
-    flashBtn($("saveBtn"),"✓ Saved");
+    flashBtn($("saveBtn"),"Saved");
   }catch(e){ alert("Could not save inputs: "+e.message); }
 }
 function loadInputs(silent){
@@ -2377,7 +2456,7 @@ function loadInputs(silent){
     // merge into a fresh default to stay safe against missing keys
     S=Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), data);
     init();
-    if(!silent) flashBtn($("loadBtn"),"✓ Loaded");
+    if(!silent) flashBtn($("loadBtn"),"Loaded");
     return true;
   }catch(e){ if(!silent) alert("Could not load inputs: "+e.message); return false; }
 }
@@ -2404,6 +2483,44 @@ $("pdfBtn").onclick=exportPDF;
 init();
 // auto-restore last saved inputs on open (if any)
 loadInputs(true);
+
+/* ===================== PERMANENT ATTRIBUTION (tamper-resistant) =====================
+   The "Developed by: AY" credit is locked at runtime. If the node is removed,
+   its text altered, or it is hidden via inline style/attributes, a MutationObserver
+   plus an interval watchdog restores it immediately. (Note: the raw HTML source on
+   disk can always be edited in a text editor — no client-side page can prevent that —
+   but live tampering through dev-tools, scripts, or CSS is reverted automatically.) */
+(function lockDevCredit(){
+  const CREDIT_TEXT="Developed by: AY";
+  const CREDIT_ID="devCredit";
+  const SAFE_CSS="text-align:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;padding:16px 12px 24px;border-top:1px solid var(--line);margin-top:8px;display:block;visibility:visible;";
+  function ensure(){
+    let el=document.getElementById(CREDIT_ID);
+    if(!el){
+      el=document.createElement("div");
+      el.id=CREDIT_ID;
+      (document.body||document.documentElement).appendChild(el);
+    }
+    // must be the bottom-most element of body
+    if(el.parentNode && el!==el.parentNode.lastElementChild){
+      el.parentNode.appendChild(el);
+    }
+    if(el.textContent!==CREDIT_TEXT) el.textContent=CREDIT_TEXT;
+    if(el.getAttribute("style")!==SAFE_CSS) el.setAttribute("style",SAFE_CSS);
+    return el;
+  }
+  const node=ensure();
+  // 1) Observe the whole document for removal / text / attribute changes.
+  const obs=new MutationObserver(()=>{ ensure(); });
+  function startObserve(){
+    obs.observe(document.documentElement,{childList:true,subtree:true,characterData:true,attributes:true});
+  }
+  startObserve();
+  // 2) Interval safety net in case the observer itself is disconnected.
+  setInterval(()=>{ try{ ensure(); startObserve(); }catch(_){ } }, 1000);
+  // 3) Re-assert before printing/exports so it appears on output too.
+  window.addEventListener("beforeprint", ensure);
+})();
 </script>
 </body>
 </html>
