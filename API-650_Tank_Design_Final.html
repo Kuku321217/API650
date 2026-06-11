@@ -480,16 +480,6 @@
           </div>
         </div>
       </div>
-
-      <div class="card">
-        <h2><span class="num">3c</span> Top Stiffener (Top Wind Girder)</h2>
-        <div class="body">
-          <div class="kv" id="topstiff"></div>
-          <div class="formula">
-            <b>Q</b> = W<sub>tr</sub> · 10⁶ · H<sub>shell</sub> / 4 (N/m). Effective shell width = 1.56·√(D·0.5·10³·t<sub>shell</sub>) + t<sub>web</sub>. I<sub>provided</sub> from the built-up composite section. (The workbook's I<sub>z,required</sub> reference is broken — supply the project value to complete the check.)
-          </div>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -826,8 +816,6 @@ const DEFAULTS = {
     {loc:null, shellT:10,   webT:10, webL:180, flT:10, flH:50},
     {loc:null, shellT:10,   webT:10, webL:180, flT:10, flH:50},
   ],
-  // Top stiffener (blue cells row 202) + project Iz,required (workbook ref broken)
-  topStiff:{shellT:16, webT:14, webL:700, flT:14, flH:230, IzReq:null},
   // ---- Compression ring (sheet "4_Compression ring") blue/editable cells ----
   // crTopShellThk (D9), crTopShellCA (D10), curb angle legs+thk (D22/F22/H22),
   // bar thickness tcr (D28), thickened shell plate ts (D31)
@@ -1521,40 +1509,6 @@ function computeCore(){
   $("stiffFoot").innerHTML = actStiffCount>0 ? `<tr>
     <td colspan="10" class="lcol">ACTUAL no. of stiffeners (per user locations): <b style="color:var(--blue)">${actStiffCount}</b> &nbsp;·&nbsp; max Z<sub>prov</sub> ${fmt(maxZprov,0)} mm³</td>
     <td></td><td>${fmt(totStiffWt,0)}</td><td></td></tr>` : "";
-
-  /* ===================== TOP STIFFENER (rows 198-211) ===================== */
-  const ts=S.topStiff;
-  const Q = extTransposed*1e6*Hshell_m/4;          // E199 = J18*10^6*J3/4
-  const tH=ts.shellT, tJ=ts.webT, tK=ts.webL, tL=ts.flT, tM=ts.flH;
-  const tEffW = 1.56*Math.sqrt(Dext*0.5*1e3*tH) + tJ;   // D202
-  const tx1=tH/2, ta1=tH*tEffW, tI1=tEffW*Math.pow(tH,3)/12;
-  const tx2=tH+tK/2, ta2=tJ*tK, tI2=tJ*Math.pow(tK,3)/12;
-  const tx3=tH+tK+tL/2, ta3=tL*tM, tI3=tM*Math.pow(tL,3)/12;
-  const taT=ta1+ta2+ta3;
-  const tX = taT>0 ? (tx1*ta1+tx2*ta2+tx3*ta3)/taT : 0;
-  const tIprov = (tI1+tI2+tI3)+(ta1*tx1*tx1+ta2*tx2*tx2+ta3*tx3*tx3)-taT*tX*tX;   // D211
-  const tWeb = Math.PI*Dext*tJ*tK*1e-6*S.density;       // uses J7? workbook uses J7=K2 — keep density per material
-  const tFl  = Math.PI*(Dext+tK*1e-3)*tL*tM*1e-6*S.density;
-  const IzReqOK = ts.IzReq!=null && !isNaN(ts.IzReq);
-  const tOK = IzReqOK ? (tIprov>=ts.IzReq) : null;
-  const tNum=(key,val)=>`<input type="text" inputmode="decimal" step="any" id="ts_${key}" value="${val}" style="width:64px;background:var(--input-fill);border:1px solid var(--input-border);color:var(--input-ink);border-radius:2px;padding:4px 6px;font-family:'IBM Plex Mono';font-size:11.5px;text-align:right;font-weight:600;">`;
-  $("topstiff").innerHTML=`
-    <div class="lbl">Q = P<sub>d</sub>·H/4</div><div class="val">${fmt(Q,1)}</div><div class="u">N/m</div>
-    <div class="lbl">Corresponding shell thickness</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('shellT',tH)}</div>
-    <div class="lbl">Web thickness</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('webT',tJ)}</div>
-    <div class="lbl">Web length</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('webL',tK)}</div>
-    <div class="lbl">Flange thickness</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('flT',tL)}</div>
-    <div class="lbl">Flange height</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('flH',tM)}</div>
-    <div class="lbl">Effective shell width</div><div class="val">${fmt(tEffW,1)}</div><div class="u">mm</div>
-    <div class="lbl">I provided</div><div class="val" style="color:var(--accent)">${fmt(tIprov,0)}</div><div class="u">mm⁴</div>
-    <div class="lbl">Top stiffener weight</div><div class="val" style="color:var(--accent-2)">${fmt(tWeb+tFl,1)}</div><div class="u">kg</div>
-    <div class="lbl">I<sub>z,required</sub> (project input)</div><div class="val" style="grid-column:2/-1;text-align:left;">${tNum('IzReq',IzReqOK?ts.IzReq:'')}</div>
-    <div class="note">${IzReqOK ? `Check: I<sub>provided</sub> ${fmt(tIprov,0)} mm⁴ ${tOK?'≥':'<'} I<sub>z,required</sub> ${fmt(ts.IzReq,0)} mm⁴ → <span class="check ${tOK?'ok':'bad'}" style="padding:2px 8px;">${tOK?'OK':'NOT OK'}</span>` : 'Enter the project I<sub>z,required</sub> to complete the check (workbook reference is broken).'}</div>`;
-  ["shellT","webT","webL","flT","flH","IzReq"].forEach(k=>{
-    const el=$("ts_"+k); if(el) el.addEventListener("input",e=>{
-      const v=e.target.value; S.topStiff[k]= v===''?null:parseFloat(v); compute();
-    });
-  });
 
   /* ===================== COMPRESSION RING (sheet 4) ===================== */
   // Inputs already available in scope: annY (annular plate yield = D4),
