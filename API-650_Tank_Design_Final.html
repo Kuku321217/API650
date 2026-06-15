@@ -1812,8 +1812,12 @@ function computeCore(){
   const seRho = S.SG*1000;                        // J5 density of fluid, kg/m³
   const seTa  = (S.annProvided - S.annCA);        // J6 corroded annular/bottom thk, mm
   const seTs  = (r1.adopt - r1.ca);               // J7 corroded thk of bottom shell course, mm
-  const seFyA = (MATMAP[S.annMatl]||{}).Y;        // J9 yield of bottom annular plate, MPa
-  const seFyS = (MATMAP[rows[0].c.moc]||{}).Y;    // J10 yield of bottom shell course, MPa
+  // J9/J10 yield strengths. Fall back to the workbook annular yield (240 MPa) when a
+  // material is not found in MATMAP, so the anchorage ratio J always resolves to a number.
+  const _seFyAraw = (MATMAP[S.annMatl]||{}).Y;
+  const _seFySraw = (MATMAP[(rows[0].c||{}).moc]||{}).Y;
+  const seFyA = (_seFyAraw!=null && !isNaN(_seFyAraw)) ? _seFyAraw : 240;  // J9 yield of bottom annular plate, MPa
+  const seFyS = (_seFySraw!=null && !isNaN(_seFySraw)) ? _seFySraw : seFyA; // J10 yield of bottom shell course, MPa
   const seCi  = S.seisCi;                         // J11
   // J12 equivalent thickness of tank shell: course-length-weighted adopted thk / shell height
   const seTU  = totLen>0 ? rows.reduce((a,r)=>a+r.len*r.adopt,0)/(S.shellH/1000) : 0;
@@ -1868,7 +1872,8 @@ function computeCore(){
   const seWint= Math.max(S.Pint, 0.4*S.Pint)*1e-3*seD/4;  // J36 design uplift per unit length, N/m
   const seWa  = Math.min(99*seTa*Math.sqrt(seFyA*seRho*1e-3*(1-0.4*seAv)*seH),
                          201.1*seH*seD*seRho*1e-3*(1-0.4*seAv));            // J37
-  const seJ   = seMrw/(((seWt*(1-0.4*seAv))+seWa-0.4*seWint)*Math.pow(seD,2)); // J39
+  const _Jden = ((seWt*(1-0.4*seAv))+seWa-0.4*seWint)*Math.pow(seD,2);
+  const seJ   = (isFinite(_Jden) && _Jden!==0) ? seMrw/_Jden : NaN; // J39 anchorage ratio
   const sigMech= (seWt*(1+0.4*seAv)+1.273*seMrw/Math.pow(seD,2))/(1000*seTs); // J45/J47
   const sigSelf= (((seWt*(1+0.4*seAv)+seWa)/(0.607-0.18667*Math.pow(seJ,2.3)))-seWa)/(1000*seTs); // J46
   let seSigC;                                       // J44
@@ -1982,7 +1987,7 @@ function computeCore(){
     <div class="lbl">Weight of shell &amp; roof (w<sub>t</sub>)</div><div class="val">${fmt(seWt,1)}</div><div class="u">N/m</div>
     <div class="lbl">Design uplift / unit length (w<sub>int</sub>)</div><div class="val">${fmt(seWint,3)}</div><div class="u">N/m</div>
     <div class="lbl">Resisting force on annulus (w<sub>a</sub>)</div><div class="val">${fmt(seWa,1)}</div><div class="u">N/m</div>
-    <div class="lbl">Anchorage ratio (J)</div><div class="val" style="color:var(--accent)">${fmt(seJ,4)}</div><div class="u"></div>
+    <div class="lbl" style="font-weight:700;">Anchorage ratio (J)</div><div class="val" style="color:var(--accent);font-weight:800;">${fmt(seJ,4)}</div><div class="u">${isNaN(seJ)?'':(seJ<0.785?'J &lt; 0.785':'J &ge; 0.785')}</div>
     <div class="lbl">Max shell compression (σ<sub>c</sub>)</div><div class="val" style="color:var(--accent-2)">${fmt(seSigC,4)}</div><div class="u">MPa</div>
     <div class="lbl">Allowable compression (F<sub>c</sub>)</div><div class="val">${fmt(seFc,4)}</div><div class="u">MPa</div>
     <div class="lbl">Parameter A = G·H·D²/t<sub>s</sub>²</div><div class="val">${fmt(seA,2)}</div><div class="u"></div>
