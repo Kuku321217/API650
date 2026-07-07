@@ -238,6 +238,30 @@
     padding:16px 12px 24px;border-top:1px solid var(--line);margin-top:8px;
   }
   @media print{ #devCredit{color:#000 !important;opacity:1 !important;display:block !important;} }
+  .warn-backdrop{
+    display:none;position:fixed;inset:0;background:rgba(29,36,44,.55);
+    z-index:9999;align-items:center;justify-content:center;padding:20px;
+  }
+  .warn-backdrop.show{display:flex;}
+  .warn-box{
+    background:var(--panel);border:1px solid var(--line-strong);border-top:4px solid var(--danger);
+    border-radius:3px;box-shadow:var(--shadow);max-width:380px;width:100%;
+    padding:22px 24px 20px;text-align:center;
+  }
+  .warn-icon{
+    width:36px;height:36px;border-radius:50%;background:var(--danger);color:#fff;
+    font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:19px;
+    display:flex;align-items:center;justify-content:center;margin:0 auto 12px;
+  }
+  .warn-title{font-weight:700;color:var(--danger);font-size:14.5px;margin-bottom:8px;
+    text-transform:uppercase;letter-spacing:.04em;font-family:'IBM Plex Mono',monospace;}
+  .warn-msg{color:var(--ink);font-size:13.5px;line-height:1.6;margin-bottom:18px;}
+  .warn-ok{
+    background:var(--accent);color:#fff;border:none;border-radius:2px;
+    padding:8px 26px;font-size:13px;font-weight:600;cursor:pointer;
+    font-family:'IBM Plex Sans',sans-serif;
+  }
+  .warn-ok:hover{background:var(--input-ink);}
   .pill{display:inline-block;background:var(--panel-2);border:1px solid var(--line);
     border-radius:2px;padding:2px 8px;font-size:11px;color:var(--accent);
     font-family:'IBM Plex Mono',monospace;}
@@ -723,6 +747,15 @@
 </div>
 <div id="devCredit">Developed by: AY</div>
 
+<div id="warnBackdrop" class="warn-backdrop">
+  <div class="warn-box">
+    <div class="warn-icon">!</div>
+    <div class="warn-title">Input out of range</div>
+    <div class="warn-msg" id="warnMsg"></div>
+    <button class="warn-ok" id="warnOk">OK</button>
+  </div>
+</div>
+
 <script>
 /* ===================== MATERIAL DATABASE (API-650 Table 5.2a, SI) ===================== */
 /* Each: name, yield Y (MPa), tensile U (MPa), tabulated Sd (Ed), tabulated St (Fd).
@@ -887,6 +920,30 @@ const $=id=>document.getElementById(id);
 const fmt=(n,d=2)=>{ if(n==null||isNaN(n))return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); };
 const PI=Math.PI;
 
+/* ===================== VALIDATION WARNING MODAL ===================== */
+function showWarning(msg){
+  $("warnMsg").textContent=msg;
+  $("warnBackdrop").classList.add("show");
+}
+function closeWarning(){ $("warnBackdrop").classList.remove("show"); }
+document.addEventListener("DOMContentLoaded",()=>{
+  $("warnOk").addEventListener("click",closeWarning);
+  $("warnBackdrop").addEventListener("click",e=>{ if(e.target.id==="warnBackdrop") closeWarning(); });
+});
+// Checks run after a geometry-level field loses focus (not on every keystroke).
+function checkLevelField(key){
+  if(key==="normalLvl"){
+    if(S.normalLvl!=null && S.Hd!=null && !isNaN(S.normalLvl) && !isNaN(S.Hd) && S.normalLvl>=S.Hd){
+      showWarning(`Normal fill level (${fmt(S.normalLvl,0)} mm) cannot be greater than or equal to the Maximum design liquid level, Hd (${fmt(S.Hd,0)} mm). Please enter a normal fill level below Hd.`);
+    }
+  }
+  if(key==="Hd"){
+    if(S.Hd!=null && S.shellH!=null && !isNaN(S.Hd) && !isNaN(S.shellH) && S.Hd>S.shellH){
+      showWarning(`Maximum design liquid level, Hd (${fmt(S.Hd,0)} mm) cannot be greater than the Tank shell height (${fmt(S.shellH,0)} mm). Please enter Hd within the shell height.`);
+    }
+  }
+}
+
 /* ===================== INPUT PANEL ===================== */
 const GEN_FIELDS = [
   ["sec","Project"],
@@ -957,6 +1014,9 @@ function buildInputs(){
       S[key]= type==="text"? inp.value : parseFloat(inp.value);
       compute();
     });
+    if(key==="normalLvl" || key==="Hd" || key==="shellH"){
+      inp.addEventListener("change",()=>{ checkLevelField("normalLvl"); checkLevelField("Hd"); });
+    }
     row.appendChild(inp);
     if(unit){ const u=document.createElement("span"); u.className="unit"; u.textContent=unit; row.appendChild(u); }
     wrap.appendChild(row);
@@ -2052,6 +2112,10 @@ function computeCore(){
   const wtShellInsC= wtShellIns;                     // M11 =K11
   // M16 Dead load incl. insulation (CORRODED) = M3+M4+M9+M5+M6+M10+M11
   const wtDeadC = wtShellC+wtStiffC+wtCompRingC+wtRoofPlC+wtRoofStrC+wtRoofInsC+wtShellInsC;
+  // K18 Total weight of tank excluding insulation (uncorroded) = SUM(K3:K9)+SUM(K12:K14)
+  const wtTotalExIns  = wtShell+wtStiff+wtRoofPl+wtRoofStr+wtAnnular+wtBottom+wtCompRing+wtPlatform+wtStairway+wtHandrail;
+  // M18 Total weight of tank excluding insulation (corroded) = SUM(M3:M9)+SUM(M12:M14)
+  const wtTotalExInsC = wtShellC+wtStiffC+wtRoofPlC+wtRoofStrC+wtAnnularC+wtBottomC+wtCompRingC+wtPlatform+wtStairway+wtHandrail;
   // Seismic shear/moment in tonne and tonne·m (OBE/OLE)
   const shearOBE = seV/9.81/1000;
   const momOBE   = seMrw/9.81/1000;
@@ -2069,7 +2133,9 @@ function computeCore(){
     <div class="lbl">Weight of spiral stairway</div><div class="val">${fmt(wtStairway,0)}</div><div class="u">kg</div>
     <div class="lbl">Weight of handrail</div><div class="val">${fmt(wtHandrail,0)}</div><div class="u">kg</div>
     <div class="lbl" style="padding-top:6px;">Dead load incl. insulation — uncorroded</div><div class="val" style="color:var(--accent);padding-top:6px;">${fmt(wtDead,0)}</div><div class="u">kg</div>
-    <div class="lbl">Dead load incl. insulation — corroded (M16)</div><div class="val" style="color:var(--accent-2)">${fmt(wtDeadC,0)}</div><div class="u">kg</div>`;
+    <div class="lbl">Dead load incl. insulation — corroded (M16)</div><div class="val" style="color:var(--accent-2)">${fmt(wtDeadC,0)}</div><div class="u">kg</div>
+    <div class="lbl" style="padding-top:6px;font-weight:700;">Total weight of tank excluding insulation — uncorroded</div><div class="val" style="color:var(--accent);padding-top:6px;font-weight:700;">${fmt(wtTotalExIns,0)}</div><div class="u">kg</div>
+    <div class="lbl" style="font-weight:700;">Total weight of tank excluding insulation — corroded (M18)</div><div class="val" style="color:var(--accent-2);font-weight:700;">${fmt(wtTotalExInsC,0)}</div><div class="u">kg</div>`;
   $("wtSeismic").innerHTML=`
     <div class="lbl">Shear force (OBE / OLE)</div><div class="val" style="color:var(--accent-2)">${fmt(shearOBE,1)}</div><div class="u">tonne</div>
     <div class="lbl">Bending moment (OBE / OLE)</div><div class="val" style="color:var(--accent-2)">${fmt(momOBE,1)}</div><div class="u">tonne·m</div>`;
